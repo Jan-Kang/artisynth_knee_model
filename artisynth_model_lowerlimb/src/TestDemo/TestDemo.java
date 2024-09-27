@@ -1,4 +1,4 @@
-package artisynth_model_TestDemo;
+package TestDemo;
 
 public class TestDemo {
 	public static void main(String[] args) {
