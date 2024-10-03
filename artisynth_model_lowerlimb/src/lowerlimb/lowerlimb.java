@@ -12,13 +12,21 @@ public class lowerlimb extends RootModel {
 	
 	String geodata = PathFinder.getSourceRelativePath(this, "data/");
 	
-	//import of femur_mesh
+
 	public void build(String[] args) throws IOException {
         
-		MechModel mech = new MechModel("mech");
+		//import of femur_mesh
+		MechModel mech_femur = new MechModel("mech_femur");
         FemModel3d femur = AnsysCdbReader.read(geodata+"Femur.cdb");
         
-        mech.addModel(femur);
-        addModel(mech);
+        mech_femur.addModel(femur);
+        addModel(mech_femur);
+        
+		//import of TibiaFibula_mesh
+		MechModel mech_tifi = new MechModel("mech_tifi");
+        FemModel3d tifi = AnsysCdbReader.read(geodata+"TibiaFibula.cdb");
+        
+        mech_tifi.addModel(tifi);
+        addModel(mech_tifi);
 	}
 }
