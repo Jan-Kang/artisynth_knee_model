@@ -7,6 +7,6 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/artisynth_core"/>
-	<classpathentry exported="true" kind="lib" path="C:/Users/ky835/artisynth_core.jar"/>
+	<classpathentry exported="true" kind="lib" path="/Users/kangyan/artisynth_core.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
