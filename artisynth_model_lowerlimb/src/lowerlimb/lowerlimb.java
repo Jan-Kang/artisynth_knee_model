@@ -172,7 +172,7 @@ public class lowerlimb extends RootModel {
 	}
 	
 	// Contact
-	
+	private void {}
 	
 	// calculates the model size
 	private void ModelSize (FemModel3d fem) {
