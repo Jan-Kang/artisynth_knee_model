@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import artisynth.core.femmodels.AnsysCdbReader;
+import artisynth.core.femmodels.FemElement3dBase;
 import artisynth.core.femmodels.FemFactory;
 import artisynth.core.femmodels.FemMeshComp;
 import artisynth.core.femmodels.FemModel.Ranging;
@@ -16,6 +17,7 @@ import artisynth.core.femmodels.FemModel3d;
 import artisynth.core.femmodels.FemNode3d;
 import artisynth.core.femmodels.NodeNumberReader;
 import artisynth.core.materials.LinearMaterial;
+import artisynth.core.materials.SimpleAxialMuscle;
 import artisynth.core.mechmodels.Collidable;
 import artisynth.core.mechmodels.CollisionBehavior;
 import artisynth.core.mechmodels.CollisionManager;
@@ -27,6 +29,7 @@ import artisynth.core.mechmodels.GimbalJoint;
 import artisynth.core.mechmodels.HingeJoint;
 import artisynth.core.mechmodels.JointBase;
 import artisynth.core.mechmodels.MechModel;
+import artisynth.core.mechmodels.Muscle;
 import artisynth.core.mechmodels.SlottedHingeJoint;
 import artisynth.core.modelbase.MonitorBase;
 import artisynth.core.renderables.ColorBar;
@@ -51,26 +54,28 @@ public class lowerlimb extends RootModel {
 	// create FEM
     FemModel3d Femur;
     FemModel3d TiFi;
+    FemModel3d collisionMeshleft;
+    FemModel3d collisionMeshright;
     // create a Joint between Femur and TibiaFibula 
     JointBase JointFTF;
     // set collision behavior
-    CollisionBehavior behav;
+    CollisionBehavior behav1, behav2, behav3;
     // set Collision Response
     CollisionResponse resp;
     
 	@Override
 	public void build(String[] args) throws IOException {
         // gravity
-        mech.setGravity (0, 0, -100);
+        mech.setGravity (0, 0, -9.81);
         // model
         Femur = importFemur ();
         TiFi = importTibiaFibula ();
         addModel (mech);
-        // joint
-        JointFTF = createJoint (Femur, TiFi);
-        JointFTF.setEnabled (true);
-        // contact
-        setCollisionBehavior (behav, Femur, TiFi);
+        
+        /*
+        PolygonalMesh FemurMesh = Femur.getSurfaceMesh();
+        FemurMesh.scale(1.2);
+        FemurMesh.
     
         /*
         // create collision mesh
@@ -80,14 +85,45 @@ public class lowerlimb extends RootModel {
         setMeshRenderProps (TiFiMeshComp);
          */
         
+        // create a collision mesh
+        collisionMeshleft = creatCollisionMeshleft(
+        		collisionMeshleft, TiFi, 
+        		6.0, 12.0, 16, 1, 1,
+        		107.891323, -23.194814, -435.43464);
+        collisionMeshright = creatCollisionMeshright(
+        		collisionMeshright, TiFi,
+        		3.0, 8.5, 16, 1, 1,
+        		60.891323, -42.194814, -435.43464); 
+        
+        // femur 275  TiFi 6610
+        // create the muscle
+        FemNode3d nodeA = Femur.getNode (275);
+        FemNode3d nodeB = TiFi.getNode (6610);
+        Muscle muscle = new Muscle ("mus", 0);
+        muscle.setPoints(nodeA, nodeB);
+        muscle.setMaterial(new SimpleAxialMuscle(1,0,0));        
+        RenderProps.setSpindleLines (muscle, 2, Color.RED);
+        mech.addAxialSpring (muscle);
+        
+        
+        // joint
+        JointFTF = createJoint (Femur, TiFi);
+        JointFTF.setEnabled (true);
+        // contact
+        setCollisionBehavior (behav1, Femur, TiFi);
+        setCollisionBehavior (behav2, Femur, collisionMeshleft);
+        setCollisionBehavior (behav3, Femur, collisionMeshright);                      
 	}	
 	
+	/*
 	// FemMeshComp render properties
 	protected void setMeshRenderProps (FemMeshComp mesh) {
 		mesh.setSurfaceRendering (SurfaceRender.Shaded);
 	    RenderProps.setFaceColor (mesh, Color.blue);
 	    RenderProps.setAlpha (mesh, 0.5);
+	
 	}
+	*/
 		
 	// import FEM model
 	private FemModel3d importFemur () throws IOException {
@@ -133,9 +169,96 @@ public class lowerlimb extends RootModel {
 	// set FEM model RenderProps
 	private void setFemRenderProps (FemModel3d fem) {
 		fem.setSurfaceRendering (SurfaceRender.Shaded);
+		//RenderProps.setSphericalPoints (fem, 0.6, Color.GREEN);
 		RenderProps.setLineColor (fem, Color.darkGray);
 		RenderProps.setFaceColor (fem, Color.LIGHT_GRAY);
 	}
+	
+	// create a collision mesh right
+	private FemModel3d creatCollisionMeshleft(
+			FemModel3d collisionMesh, FemModel3d fem, 
+			double l, double r, int nt, int nl, int nr,
+			double x, double y, double z) {
+		collisionMesh = FemFactory.createCylinder(collisionMesh, l, r, nt, nl, nr);
+        mech.addModel(collisionMesh); 
+		// set physical properties
+        collisionMesh.setDensity (1.9e-6);
+        collisionMesh.setMassDamping (0.01);
+        collisionMesh.setStiffnessDamping (0.02);
+        collisionMesh.setMaterial (new LinearMaterial (1e9, 0.3));
+        collisionMesh.setName ("collisionMeshleft");
+    	setCollisionMeshRenderProps(collisionMesh);
+        // set new Position
+        Vector3d offset = new Vector3d (x, y, z);
+        for(FemNode3d node: collisionMesh.getNodes()) {
+        	Point3d pos = new Point3d(node.getPosition());
+        	pos.add(offset);
+        	node.setPosition(pos);
+            }
+        // update property
+        collisionMesh.updateSlavePos ();
+        collisionMesh.invalidateStressAndStiffness ();
+        // connect between collision and model
+        Point3d nearestPoint = new Point3d ();
+    	for (FemNode3d n: collisionMesh.getNodes ()) {
+    		if (collisionMesh.isSurfaceNode(n)) {
+    			if (n.getPosition ().z < z) {
+    				FemElement3dBase nearestElem = fem.findNearestSurfaceElement (nearestPoint, n.getPosition ());
+    				if (nearestElem != null) {
+    					mech.attachPoint(n, nearestElem);
+        				}
+    				}
+    			}
+        	}
+    	return collisionMesh;
+	}
+	
+	// create a collision mesh right
+	private FemModel3d creatCollisionMeshright(
+			FemModel3d collisionMesh, FemModel3d fem, 
+			double l, double r, int nt, int nl, int nr,
+			double x, double y, double z) {
+		collisionMesh = FemFactory.createCylinder(collisionMesh, l, r, nt, nl, nr);
+        mech.addModel(collisionMesh);   
+		// set physical properties
+        collisionMesh.setDensity (1.9e-4);
+        collisionMesh.setMassDamping (0.01);
+        collisionMesh.setStiffnessDamping (0.02);
+        collisionMesh.setMaterial (new LinearMaterial (1e9, 0.3));
+        collisionMesh.setName ("collisionMeshright");
+    	setCollisionMeshRenderProps(collisionMesh);
+        // set new Position
+        Vector3d offset = new Vector3d (x, y, z);
+        for(FemNode3d node: collisionMesh.getNodes()) {
+        	Point3d pos = new Point3d(node.getPosition());
+        	pos.add(offset);
+        	node.setPosition(pos);
+            }
+        // update property
+        collisionMesh.updateSlavePos ();
+        collisionMesh.invalidateStressAndStiffness ();
+        // connect between collision and model
+        Point3d nearestPoint = new Point3d ();
+    	for (FemNode3d n: collisionMesh.getNodes ()) {
+    		if (collisionMesh.isSurfaceNode(n)) {
+    			if (n.getPosition ().z < z) {
+    				FemElement3dBase nearestElem = fem.findNearestSurfaceElement (nearestPoint, n.getPosition ());
+    				if (nearestElem != null) {
+    					mech.attachPoint(n, nearestElem);
+        				}
+    				}
+    			}
+        	}
+    	return collisionMesh;
+	}
+
+	// set collision mesh RenderProps
+	private void setCollisionMeshRenderProps (FemModel3d fem) {
+		fem.setSurfaceRendering (SurfaceRender.Shaded);
+		RenderProps.setLineColor (fem, Color.darkGray);
+		RenderProps.setFaceColor (fem, Color.ORANGE);
+	}
+	
 	
 	// create joint
 	private JointBase createJoint (ConnectableBody femur, ConnectableBody tifi) {
@@ -229,8 +352,7 @@ public class lowerlimb extends RootModel {
 	    panel.addWidget (joint, "damping");
 	    addControlPanel (panel);
 	}
-	
-	
+		
 	// set collision Behavior
 	private void setCollisionBehavior (CollisionBehavior behav, FemModel3d fem1, FemModel3d fem2) {
         behav = mech.setCollisionBehavior (fem1, fem2, true, 0);
