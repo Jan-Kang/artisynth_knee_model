@@ -29,6 +29,7 @@ public class Knee_model extends RootModel {
 		Mensicus = importMensicus ();
 		TibiaCart = importTibiaCart ();
 		TibiaFibula = importTibiaFibula ();
+		addModel (mech);
 	}
 	// import FEM model
 	private FemModel3d importFemur () throws IOException {
@@ -67,19 +68,19 @@ public class Knee_model extends RootModel {
 	}
 	private FemModel3d importMensicus () throws IOException {
 		// import model
-		FemModel3d FemurCart = null;
-		FemurCart = new FemModel3d ("FemurCart");
-		FemurCart = AnsysCdbReader.read (Modeldata + "mesh_FemurCart.cdb");
+		FemModel3d Mensicus = null;
+		Mensicus = new FemModel3d ("Mensicus");
+		Mensicus = AnsysCdbReader.read (Modeldata + "mesh_Mensicus.cdb");
 		// set physical properties
-		FemurCart.setDensity (1.9e-6);
-		FemurCart.setMassDamping (0.01);
-		FemurCart.setStiffnessDamping (0.02);
-		FemurCart.setMaterial (new LinearMaterial (1e9, 0.3));
-		FemurCart.setName ("FemurCart");
-		if (FemurCart.isVolumeValid ())
-			System.out.println ("FemurCart mesh valid.");
-		mech.addModel (FemurCart);
-		setFemRenderProps (FemurCart);
+		Mensicus.setDensity (1.9e-6);
+		Mensicus.setMassDamping (0.01);
+		Mensicus.setStiffnessDamping (0.02);
+		Mensicus.setMaterial (new LinearMaterial (1e9, 0.3));
+		Mensicus.setName ("Mensicus");
+		if (Mensicus.isVolumeValid ())
+			System.out.println ("Mensicus mesh valid.");
+		mech.addModel (Mensicus);
+		setFemRenderProps (Mensicus);
 		return FemurCart;
 	}
 	private FemModel3d importTibiaCart () throws IOException {
