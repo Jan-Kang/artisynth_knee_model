@@ -29,8 +29,10 @@ import artisynth.core.mechmodels.GimbalJoint;
 import artisynth.core.mechmodels.HingeJoint;
 import artisynth.core.mechmodels.JointBase;
 import artisynth.core.mechmodels.MechModel;
+import artisynth.core.mechmodels.MultiPointMuscle;
 import artisynth.core.mechmodels.Muscle;
 import artisynth.core.mechmodels.SlottedHingeJoint;
+import artisynth.core.mechmodels.Spring;
 import artisynth.core.modelbase.MonitorBase;
 import artisynth.core.renderables.ColorBar;
 import artisynth.core.workspace.RootModel;
@@ -96,15 +98,41 @@ public class lowerlimb extends RootModel {
         		60.891323, -42.194814, -435.43464); 
         
         // femur 275  TiFi 6610
-        // create the muscle
-        FemNode3d nodeA = Femur.getNode (275);
-        FemNode3d nodeB = TiFi.getNode (6610);
-        Muscle muscle = new Muscle ("mus", 0);
-        muscle.setPoints(nodeA, nodeB);
-        muscle.setMaterial(new SimpleAxialMuscle(1,0,0));        
-        RenderProps.setSpindleLines (muscle, 2, Color.RED);
-        mech.addAxialSpring (muscle);
+        // create the muscleleft
+        FemNode3d node275 = Femur.getNode (275);
+        FemNode3d node6610 = TiFi.getNode (6610);
+        Muscle muscleleft = new Muscle ("musleft", 0);
+        muscleleft.setPoints(node275, node6610);
+        muscleleft.setMaterial(new SimpleAxialMuscle(1,0,0));        
+        RenderProps.setSpindleLines (muscleleft, 2, Color.RED);
+        mech.addAxialSpring (muscleleft);
         
+        // femur 201 TiFi 6086
+        // create the muscleright
+        FemNode3d node201 = Femur.getNode(201);
+        FemNode3d node6081 = TiFi.getNode(6086);
+        Muscle muscleright = new Muscle ("musright", 0);
+        muscleright.setPoints(node201, node6081);
+        muscleright.setMaterial(new SimpleAxialMuscle(1,0,0));        
+        RenderProps.setSpindleLines (muscleright, 2, Color.RED);
+        mech.addAxialSpring (muscleright);
+        
+        // femur 298 2784 TiFi 6080 9235 6096
+        // create the musclermid
+        FemNode3d node298 = Femur.getNode(298);
+        FemNode3d node2784 = Femur.getNode(2784);
+        FemNode3d node6096 = TiFi.getNode(6096);
+        FemNode3d node9235 = TiFi.getNode(9235);
+        FemNode3d node6080 = TiFi.getNode(6080);
+        MultiPointMuscle musclemid = new MultiPointMuscle("musmid");
+        musclemid.addPoint (node298);
+        musclemid.addPoint (node2784);
+//        musclemid.addPoint (node9235);
+//        musclemid.addPoint (node6096);
+        musclemid.addPoint (node6080);
+        musclemid.setMaterial (new SimpleAxialMuscle(1,0,0));    
+        RenderProps.setSpindleLines (musclemid, 2, Color.RED);
+        mech.addMultiPointSpring (musclemid);
         
         // joint
         JointFTF = createJoint (Femur, TiFi);
@@ -169,7 +197,7 @@ public class lowerlimb extends RootModel {
 	// set FEM model RenderProps
 	private void setFemRenderProps (FemModel3d fem) {
 		fem.setSurfaceRendering (SurfaceRender.Shaded);
-		//RenderProps.setSphericalPoints (fem, 0.6, Color.GREEN);
+		RenderProps.setSphericalPoints (fem, 0.6, Color.GREEN);
 		RenderProps.setLineColor (fem, Color.darkGray);
 		RenderProps.setFaceColor (fem, Color.LIGHT_GRAY);
 	}
