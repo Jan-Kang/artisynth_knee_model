@@ -2,23 +2,17 @@ package lowerlimb;
 
 import java.awt.Color;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import artisynth.core.femmodels.AnsysCdbReader;
 import artisynth.core.femmodels.FemElement3dBase;
 import artisynth.core.femmodels.FemFactory;
-import artisynth.core.femmodels.FemMeshComp;
-import artisynth.core.femmodels.FemModel.Ranging;
 import artisynth.core.femmodels.FemModel.SurfaceRender;
 import artisynth.core.gui.ControlPanel;
 import artisynth.core.femmodels.FemModel3d;
 import artisynth.core.femmodels.FemNode3d;
-import artisynth.core.femmodels.NodeNumberReader;
 import artisynth.core.materials.LinearMaterial;
 import artisynth.core.materials.SimpleAxialMuscle;
-import artisynth.core.mechmodels.Collidable;
 import artisynth.core.mechmodels.CollisionBehavior;
 import artisynth.core.mechmodels.CollisionManager;
 import artisynth.core.mechmodels.CollisionResponse;
@@ -26,26 +20,18 @@ import artisynth.core.mechmodels.ConnectableBody;
 import artisynth.core.mechmodels.ContactData;
 import artisynth.core.mechmodels.Frame;
 import artisynth.core.mechmodels.GimbalJoint;
-import artisynth.core.mechmodels.HingeJoint;
 import artisynth.core.mechmodels.JointBase;
 import artisynth.core.mechmodels.MechModel;
 import artisynth.core.mechmodels.MultiPointMuscle;
 import artisynth.core.mechmodels.Muscle;
-import artisynth.core.mechmodels.SlottedHingeJoint;
-import artisynth.core.mechmodels.Spring;
 import artisynth.core.modelbase.MonitorBase;
-import artisynth.core.renderables.ColorBar;
 import artisynth.core.workspace.RootModel;
-import maspack.geometry.PolygonalMesh;
-import maspack.geometry.Vertex3d;
 import maspack.matrix.Point3d;
 import maspack.matrix.RigidTransform3d;
 import maspack.matrix.Vector3d;
 import maspack.matrix.VectorNd;
-import maspack.render.RenderList;
 import maspack.render.RenderProps;
 import maspack.render.Renderer.AxisDrawStyle;
-import maspack.util.DoubleInterval;
 import maspack.util.PathFinder;
 
 public class lowerlimb extends RootModel {
@@ -73,19 +59,6 @@ public class lowerlimb extends RootModel {
         Femur = importFemur ();
         TiFi = importTibiaFibula ();
         addModel (mech);
-        
-        /*
-        PolygonalMesh FemurMesh = Femur.getSurfaceMesh();
-        FemurMesh.scale(1.2);
-        FemurMesh.
-    
-        /*
-        // create collision mesh
-        FemMeshComp FemurMeshComp = Femur.getSurfaceMeshComp ();
-        FemMeshComp TiFiMeshComp = TiFi.getSurfaceMeshComp ();
-        setMeshRenderProps (FemurMeshComp);
-        setMeshRenderProps (TiFiMeshComp);
-         */
         
         // create a collision mesh
         collisionMeshleft = creatCollisionMeshleft(
@@ -142,16 +115,6 @@ public class lowerlimb extends RootModel {
         setCollisionBehavior (behav2, Femur, collisionMeshleft);
         setCollisionBehavior (behav3, Femur, collisionMeshright);                      
 	}	
-	
-	/*
-	// FemMeshComp render properties
-	protected void setMeshRenderProps (FemMeshComp mesh) {
-		mesh.setSurfaceRendering (SurfaceRender.Shaded);
-	    RenderProps.setFaceColor (mesh, Color.blue);
-	    RenderProps.setAlpha (mesh, 0.5);
-	
-	}
-	*/
 		
 	// import FEM model
 	private FemModel3d importFemur () throws IOException {
