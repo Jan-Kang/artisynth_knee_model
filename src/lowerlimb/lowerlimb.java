@@ -94,8 +94,8 @@ public class lowerlimb extends RootModel {
         // create the musclermid
         FemNode3d node298 = Femur.getNode(298);
         FemNode3d node2784 = Femur.getNode(2784);
-        FemNode3d node6096 = TiFi.getNode(6096);
-        FemNode3d node9235 = TiFi.getNode(9235);
+        // FemNode3d node6096 = TiFi.getNode(6096);
+        // FemNode3d node9235 = TiFi.getNode(9235);
         FemNode3d node6080 = TiFi.getNode(6080);
         MultiPointMuscle musclemid = new MultiPointMuscle("musmid");
         musclemid.addPoint (node298);

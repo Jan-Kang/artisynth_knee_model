@@ -8,7 +8,9 @@ import artisynth.core.femmodels.FemModel3d;
 import artisynth.core.femmodels.FemModel.SurfaceRender;
 import artisynth.core.materials.LinearMaterial;
 import artisynth.core.mechmodels.MechModel;
+import artisynth.core.mechmodels.RigidBody;
 import artisynth.core.workspace.RootModel;
+import maspack.geometry.PolygonalMesh;
 import maspack.render.RenderProps;
 
 public class Knee_model extends RootModel {
@@ -16,27 +18,54 @@ public class Knee_model extends RootModel {
 	String Modeldata = maspack.util.PathFinder.getSourceRelativePath(this, "data/");
 	// create MECH
 	MechModel mech = new MechModel ();
+	// create Rigid
+	RigidBody FemurRigid, TibiaFibulaRigid;
 	// create FEM
-	FemModel3d Femur, FemurCart, Mensicus, TibiaCart, TibiaFibula;
+	FemModel3d Femur, FemurCart, 
+			   Mensicus, 
+			   TibiaCart, TibiaFibula,
+			   Patella, PatellaCart;
 	
 	@Override
 	public void build (String [] args) throws IOException {
 		// set a gravity
 		mech.setGravity (0, 0, -9.81);
-		// create model
+		// create rigid model
+	    FemurRigid = importFemurRigid ();
+	    // TibiaFibulaRigid = importTibiaFibulaRigid ();
+	    // create FEM model
 		Femur = importFemur ();
-		FemurCart = importFemurCart ();
-		Mensicus = importMensicus ();
-		TibiaCart = importTibiaCart ();
-		TibiaFibula = importTibiaFibula ();
+		// FemurCart = importFemurCart ();
+		// Mensicus = importMensicus ();
+		// TibiaCart = importTibiaCart ();
+		// TibiaFibula = importTibiaFibula ();
+		// Patella = importPatella ();
+		// PatellaCart = importPatellaCart ();
 		addModel (mech);
+	}
+	// import Rigid model
+	private RigidBody importFemurRigid () throws IOException {
+		PolygonalMesh meshFemur = null;
+		meshFemur = new PolygonalMesh (Modeldata + "mesh_femur_rigid.obj");
+		RigidBody FemurRigid = 
+				RigidBody.createFromMesh("FemurRigid", meshFemur, 10, 1);
+		mech.addRigidBody(FemurRigid);
+		return FemurRigid;
+	}	
+	private RigidBody importTibiaFibulaRigid () throws IOException {
+		PolygonalMesh meshTibiaFibulaRigid = null;
+		meshTibiaFibulaRigid = new PolygonalMesh (Modeldata + "mesh_TibiaFibula_rigid.obj");
+		RigidBody TibiaFibulaRigid = 
+				RigidBody.createFromMesh("TibiaFibulaRigid", meshTibiaFibulaRigid, 10, 1);
+		mech.addRigidBody(TibiaFibulaRigid);
+		return TibiaFibulaRigid;
 	}
 	// import FEM model
 	private FemModel3d importFemur () throws IOException {
 		// import model
 		FemModel3d Femur = null;
 		Femur = new FemModel3d ("Femur");
-		Femur = AnsysCdbReader.read (Modeldata + "mesh_Femur.cdb");
+		Femur = AnsysCdbReader.read (Modeldata + "mesh_Femur_part.cdb");
 		// set physical properties
 		Femur.setDensity (1.9e-6);
 		Femur.setMassDamping (0.01);
@@ -104,7 +133,7 @@ public class Knee_model extends RootModel {
 		// import model
 		FemModel3d TibiaFibula = null;
 		TibiaFibula = new FemModel3d ("TibiaFibula");
-		TibiaFibula = AnsysCdbReader.read (Modeldata + "mesh_TibiaFibula.cdb");
+		TibiaFibula = AnsysCdbReader.read (Modeldata + "mesh_TibiaFibula_part.cdb");
 		// set physical properties
 		TibiaFibula.setDensity (1.9e-6);
 		TibiaFibula.setMassDamping (0.01);
@@ -117,6 +146,40 @@ public class Knee_model extends RootModel {
 		setFemRenderProps (TibiaFibula);
 		return TibiaFibula;
 	}
+	private FemModel3d importPatella () throws IOException {
+		// import model
+		FemModel3d Patella = null;
+		Patella = new FemModel3d ("Patella");
+		Patella = AnsysCdbReader.read (Modeldata + "mesh_Patella.cdb");
+		// set physical properties
+		Patella.setDensity (1.9e-6);
+		Patella.setMassDamping (0.01);
+		Patella.setStiffnessDamping (0.02);
+		Patella.setMaterial (new LinearMaterial (1e9, 0.3));
+		Patella.setName ("Patella");
+		if (Patella.isVolumeValid ())
+			System.out.println ("Patella mesh valid.");
+		mech.addModel (Patella);
+		setFemRenderProps (Patella);
+		return Patella;
+	}
+	private FemModel3d importPatellaCart () throws IOException {
+		// import model
+		FemModel3d PatellaCart = null;
+		PatellaCart = new FemModel3d ("PatellaCart");
+		PatellaCart = AnsysCdbReader.read (Modeldata + "mesh_PatellaCart.cdb");
+		// set physical properties
+		PatellaCart.setDensity (1.9e-6);
+		PatellaCart.setMassDamping (0.01);
+		PatellaCart.setStiffnessDamping (0.02);
+		PatellaCart.setMaterial (new LinearMaterial (1e9, 0.3));
+		PatellaCart.setName ("PatellaCart");
+		if (PatellaCart.isVolumeValid ())
+			System.out.println ("PatellaCart mesh valid.");
+		mech.addModel (PatellaCart);
+		setFemRenderProps (PatellaCart);
+		return PatellaCart;
+	}
 	// set FEM model render properties
 	private void setFemRenderProps (FemModel3d fem) {
 		fem.setSurfaceRendering (SurfaceRender.Shaded);
@@ -124,6 +187,5 @@ public class Knee_model extends RootModel {
 		RenderProps.setLineColor (fem, Color.darkGray);
 		RenderProps.setFaceColor (fem, Color.LIGHT_GRAY);
 		// RenderProps.setSphericalPoints (fem, 0.5, Color.CYAN);
-
 	}
 }
