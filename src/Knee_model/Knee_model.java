@@ -5,13 +5,25 @@ import java.io.IOException;
 
 import artisynth.core.femmodels.AnsysCdbReader;
 import artisynth.core.femmodels.FemModel3d;
+import artisynth.core.femmodels.FemNode3d;
 import artisynth.core.femmodels.FemModel.SurfaceRender;
+import artisynth.core.gui.ControlPanel;
+import artisynth.core.materials.LinearAxialMaterial;
 import artisynth.core.materials.LinearMaterial;
+import artisynth.core.mechmodels.CollisionBehavior;
+import artisynth.core.mechmodels.CollisionManager;
+import artisynth.core.mechmodels.CollisionResponse;
+import artisynth.core.mechmodels.GimbalJoint;
+import artisynth.core.mechmodels.JointBase;
 import artisynth.core.mechmodels.MechModel;
+import artisynth.core.mechmodels.MultiPointSpring;
 import artisynth.core.mechmodels.RigidBody;
 import artisynth.core.workspace.RootModel;
 import maspack.geometry.PolygonalMesh;
+import maspack.matrix.RigidTransform3d;
+import maspack.matrix.Vector3d;
 import maspack.render.RenderProps;
+import maspack.render.Renderer.AxisDrawStyle;
 
 public class Knee_model extends RootModel {
 	// path of data
@@ -25,23 +37,149 @@ public class Knee_model extends RootModel {
 			   Mensicus, 
 			   TibiaCart, TibiaFibula,
 			   Patella, PatellaCart;
+	// set collision behavior
+    CollisionBehavior behav1, behav2, behav3, behav4, behav5, behav6, behav7;
+    // set Collision Response
+    CollisionResponse resp;
 	
 	@Override
 	public void build (String [] args) throws IOException {
 		// set a gravity
-		mech.setGravity (0, 0, -9.81);
+		mech.setGravity (0, -9.81, 0);
 		// create rigid model
 	    FemurRigid = importFemurRigid ();
-	    // TibiaFibulaRigid = importTibiaFibulaRigid ();
+	    TibiaFibulaRigid = importTibiaFibulaRigid ();
+	    TibiaFibulaRigid.setDynamic(false);
 	    // create FEM model
 		Femur = importFemur ();
-		// FemurCart = importFemurCart ();
-		// Mensicus = importMensicus ();
-		// TibiaCart = importTibiaCart ();
-		// TibiaFibula = importTibiaFibula ();
-		// Patella = importPatella ();
-		// PatellaCart = importPatellaCart ();
+		FemurCart = importFemurCart ();
+		Mensicus = importMensicus ();
+		TibiaCart = importTibiaCart ();
+		TibiaFibula = importTibiaFibula ();
+		Patella = importPatella ();
+		PatellaCart = importPatellaCart ();
 		addModel (mech);
+		// attachment femur
+    	for (FemNode3d femurNode: Femur.getNodes ()) {
+    		if (Femur.isSurfaceNode(femurNode)) {
+    			if (femurNode.getPosition ().y > 1436 ) {
+    					mech.attachPoint (femurNode, FemurRigid);
+    				}
+    			}
+        	}
+		// attachment TiFi
+		for (FemNode3d TiFiNode : TibiaFibula.getNodes ()) {
+    		if (Femur.isSurfaceNode(TiFiNode)) {
+    			if (TiFiNode.getPosition().y < 1287) {
+    					mech.attachPoint (TiFiNode, TibiaFibulaRigid);
+				}
+    		}
+		}
+		// contact between models
+        setCollisionBehavior (behav1, Femur, FemurCart);
+        setCollisionBehavior (behav2, TibiaFibula, TibiaCart);
+        setCollisionBehavior (behav3, FemurCart, TibiaCart);
+        setCollisionBehavior (behav4, FemurCart, Patella);
+        setCollisionBehavior (behav5, Patella, PatellaCart);
+        setCollisionBehavior (behav6, Mensicus, FemurCart);
+        setCollisionBehavior (behav7, Mensicus, TibiaCart);
+        // set joint
+		Vector3d origin = new Vector3d (360, 1380, 840);
+		RigidTransform3d TDW =
+				new RigidTransform3d (origin.x, origin.y, origin.z);
+		TDW.setRpyDeg (0, 90, 0);
+		GimbalJoint joint = new GimbalJoint (FemurRigid, TibiaFibulaRigid, TDW);
+		joint.setRollRange (-90, 0);
+	    joint.setPitchRange (-5, 5);
+	    joint.setYawRange (-5, 5);
+		mech.addBodyConnector (joint);
+		setJointRenderProps (joint);
+		JointControl(joint);
+		// set ligaments
+		// MCL
+        FemNode3d node4236 = Femur.getNode (4236);
+        FemNode3d node9417 = TibiaFibula.getNode (9417);
+        MultiPointSpring  MCL = new MultiPointSpring ("MCL");
+        MCL.setMaterial (new LinearAxialMaterial (100, 0.003));
+        MCL.addPoint (node4236);
+        MCL.addPoint (node9417);
+        RenderProps.setSpindleLines (MCL, 2, Color.RED);
+        mech.addMultiPointSpring (MCL);
+        // LCL
+        FemNode3d node2015 = Femur.getNode (2015);
+        FemNode3d node294 = TibiaFibula.getNode (294);
+        MultiPointSpring  LCL = new MultiPointSpring ("LCL");
+        LCL.setMaterial (new LinearAxialMaterial (100, 0.003));
+        LCL.addPoint (node2015);
+        LCL.addPoint (node294);
+        RenderProps.setSpindleLines (LCL, 2, Color.RED);
+        mech.addMultiPointSpring (LCL);
+        // ACL
+        FemNode3d node389 = Femur.getNode (389);
+        FemNode3d node8152 = TibiaFibula.getNode (8152);
+        MultiPointSpring  ACL = new MultiPointSpring ("ACL");
+        ACL.setMaterial (new LinearAxialMaterial (100, 0.003));
+        ACL.addPoint (node389);
+        ACL.addPoint (node8152);
+        RenderProps.setSpindleLines (ACL, 2, Color.RED);
+        mech.addMultiPointSpring (ACL);
+        // PCL
+        FemNode3d node1113 = Femur.getNode (1113);
+        FemNode3d node8512 = TibiaFibula.getNode (8512);
+        MultiPointSpring  PCL = new MultiPointSpring ("PCL");
+        PCL.setMaterial (new LinearAxialMaterial (100, 0.003));
+        PCL.addPoint (node1113);
+        PCL.addPoint (node8512);
+        RenderProps.setSpindleLines (PCL, 2, Color.RED);
+        mech.addMultiPointSpring (PCL);
+        // POL
+        FemNode3d node3768 = Femur.getNode (3768);
+        FemNode3d node8809 = TibiaFibula.getNode (8809);
+        MultiPointSpring  POL = new MultiPointSpring ("POL");
+        POL.setMaterial (new LinearAxialMaterial (100, 0.003));
+        POL.addPoint (node3768);
+        POL.addPoint (node8809);
+        RenderProps.setSpindleLines (POL, 2, Color.RED);
+        mech.addMultiPointSpring (POL);
+        // PL
+        FemNode3d node1914 = Patella.getNode (1914);
+        FemNode3d node9174 = TibiaFibula.getNode (9174);
+        MultiPointSpring  PL = new MultiPointSpring ("PL");
+        PL.setMaterial (new LinearAxialMaterial (100, 0.003));
+        PL.addPoint (node1914);
+        PL.addPoint (node9174);
+        RenderProps.setSpindleLines (PL, 2, Color.RED);
+        mech.addMultiPointSpring (PL);
+	}
+ 	// set joint RenderProps
+	private void setJointRenderProps (JointBase joint) {
+		joint.setShaftLength (70);
+		joint.setShaftRadius (1);
+		joint.setAxisLength (50);
+		joint.setDrawFrameC (AxisDrawStyle.ARROW);
+		joint.setDrawFrameD (AxisDrawStyle.ARROW);
+	}
+	// Control Joint
+	private void JointControl (JointBase joint) {
+	    ControlPanel panel = new ControlPanel();
+	    panel.addWidget (joint, "roll");
+	    panel.addWidget (joint, "pitch");
+	    panel.addWidget (joint, "yaw");
+	    panel.addWidget (joint, "rollRange");
+	    panel.addWidget (joint, "pitchRange");
+	    panel.addWidget (joint, "yawRange");
+	    panel.addWidget (joint, "rollLocked");
+	    panel.addWidget (joint, "pitchLocked");
+	    panel.addWidget (joint, "yawLocked");
+	    panel.addWidget (joint, "drawFrameC");
+	    panel.addWidget (joint, "drawFrameD");
+	    panel.addWidget (joint, "axisLength");
+	    panel.addWidget (joint, "jointRadius");
+	    panel.addWidget (joint, "linearCompliance");
+	    panel.addWidget (joint, "rotaryCompliance");
+	    panel.addWidget (joint, "compliance");
+	    panel.addWidget (joint, "damping");
+	    addControlPanel (panel);
 	}
 	// import Rigid model
 	private RigidBody importFemurRigid () throws IOException {
@@ -110,7 +248,7 @@ public class Knee_model extends RootModel {
 			System.out.println ("Mensicus mesh valid.");
 		mech.addModel (Mensicus);
 		setFemRenderProps (Mensicus);
-		return FemurCart;
+		return Mensicus;
 	}
 	private FemModel3d importTibiaCart () throws IOException {
 		// import model
@@ -187,5 +325,22 @@ public class Knee_model extends RootModel {
 		RenderProps.setLineColor (fem, Color.darkGray);
 		RenderProps.setFaceColor (fem, Color.LIGHT_GRAY);
 		// RenderProps.setSphericalPoints (fem, 0.5, Color.CYAN);
+	}
+	// set collision Behavior
+	private void setCollisionBehavior (CollisionBehavior behav, FemModel3d fem1, FemModel3d fem2) {
+        behav = mech.setCollisionBehavior (fem1, fem2, true, 0);
+        behav.setCompliance (50);
+        behav.setDamping (20);
+        resp = mech.setCollisionResponse (fem1, fem2);
+        setCollisionManager();
+	}
+    // set collision manager
+	private void setCollisionManager () {
+		CollisionManager cm = mech.getCollisionManager();
+        cm.setDrawContactForces (true);
+        cm.setDrawFrictionForces (true);
+        cm.setContactForceLenScale (1);
+        RenderProps.setVisible (cm, true);
+        RenderProps.setSolidArrowLines (cm, 0.2, Color.RED);
 	}
 }
