@@ -13,10 +13,13 @@ import artisynth.core.materials.LinearMaterial;
 import artisynth.core.mechmodels.CollisionBehavior;
 import artisynth.core.mechmodels.CollisionManager;
 import artisynth.core.mechmodels.CollisionResponse;
+import artisynth.core.mechmodels.FrameMarker;
 import artisynth.core.mechmodels.GimbalJoint;
 import artisynth.core.mechmodels.JointBase;
 import artisynth.core.mechmodels.MechModel;
+import artisynth.core.mechmodels.MultiPointMuscle;
 import artisynth.core.mechmodels.MultiPointSpring;
+import artisynth.core.mechmodels.PointFrameAttachment;
 import artisynth.core.mechmodels.RigidBody;
 import artisynth.core.workspace.RootModel;
 import maspack.geometry.PolygonalMesh;
@@ -63,7 +66,7 @@ public class Knee_model extends RootModel {
     	for (FemNode3d femurNode: Femur.getNodes ()) {
     		if (Femur.isSurfaceNode(femurNode)) {
     			if (femurNode.getPosition ().y > 1436 ) {
-    					mech.attachPoint (femurNode, FemurRigid);
+    					mech.addAttachment (new PointFrameAttachment (FemurRigid, femurNode));
     				}
     			}
         	}
@@ -71,7 +74,7 @@ public class Knee_model extends RootModel {
 		for (FemNode3d TiFiNode : TibiaFibula.getNodes ()) {
     		if (Femur.isSurfaceNode(TiFiNode)) {
     			if (TiFiNode.getPosition().y < 1287) {
-    					mech.attachPoint (TiFiNode, TibiaFibulaRigid);
+						mech.addAttachment (new PointFrameAttachment (TibiaFibulaRigid, TiFiNode));
 				}
     		}
 		}
@@ -98,12 +101,20 @@ public class Knee_model extends RootModel {
 		// set ligaments
 		// MCL
         FemNode3d node4236 = Femur.getNode (4236);
+        FemNode3d node31321 = Femur.getNode (31321);
+        FemNode3d node17254 = Mensicus.getNode(17254);
+        FemNode3d node8749 = TibiaFibula.getNode (8749);
+        FemNode3d node23525 = TibiaFibula.getNode (23525);
         FemNode3d node9417 = TibiaFibula.getNode (9417);
         MultiPointSpring  MCL = new MultiPointSpring ("MCL");
         MCL.setMaterial (new LinearAxialMaterial (100, 0.003));
         MCL.addPoint (node4236);
+        MCL.addPoint (node31321);
+        MCL.addPoint (node17254);
+        MCL.addPoint (node8749);
+        MCL.addPoint (node23525);
         MCL.addPoint (node9417);
-        RenderProps.setSpindleLines (MCL, 2, Color.RED);
+        RenderProps.setCylindricalLines(MCL, 2, Color.cyan);
         mech.addMultiPointSpring (MCL);
         // LCL
         FemNode3d node2015 = Femur.getNode (2015);
@@ -112,7 +123,7 @@ public class Knee_model extends RootModel {
         LCL.setMaterial (new LinearAxialMaterial (100, 0.003));
         LCL.addPoint (node2015);
         LCL.addPoint (node294);
-        RenderProps.setSpindleLines (LCL, 2, Color.RED);
+        RenderProps.setSpindleLines (LCL, 2, Color.cyan);
         mech.addMultiPointSpring (LCL);
         // ACL
         FemNode3d node389 = Femur.getNode (389);
@@ -121,7 +132,7 @@ public class Knee_model extends RootModel {
         ACL.setMaterial (new LinearAxialMaterial (100, 0.003));
         ACL.addPoint (node389);
         ACL.addPoint (node8152);
-        RenderProps.setSpindleLines (ACL, 2, Color.RED);
+        RenderProps.setSpindleLines (ACL, 2, Color.cyan);
         mech.addMultiPointSpring (ACL);
         // PCL
         FemNode3d node1113 = Femur.getNode (1113);
@@ -130,16 +141,22 @@ public class Knee_model extends RootModel {
         PCL.setMaterial (new LinearAxialMaterial (100, 0.003));
         PCL.addPoint (node1113);
         PCL.addPoint (node8512);
-        RenderProps.setSpindleLines (PCL, 2, Color.RED);
+        RenderProps.setSpindleLines (PCL, 2, Color.cyan);
         mech.addMultiPointSpring (PCL);
         // POL
         FemNode3d node3768 = Femur.getNode (3768);
+        FemNode3d node3929 = Femur.getNode (3929);
+        FemNode3d node21042 = Mensicus.getNode(21042);
+        FemNode3d node8691 = TibiaFibula.getNode(8691);
         FemNode3d node8809 = TibiaFibula.getNode (8809);
         MultiPointSpring  POL = new MultiPointSpring ("POL");
         POL.setMaterial (new LinearAxialMaterial (100, 0.003));
         POL.addPoint (node3768);
+        POL.addPoint(node3929);
+        POL.addPoint(node21042);
+        POL.addPoint(node8691);
         POL.addPoint (node8809);
-        RenderProps.setSpindleLines (POL, 2, Color.RED);
+        RenderProps.setCylindricalLines (POL, 2, Color.cyan);
         mech.addMultiPointSpring (POL);
         // PL
         FemNode3d node1914 = Patella.getNode (1914);
@@ -148,8 +165,25 @@ public class Knee_model extends RootModel {
         PL.setMaterial (new LinearAxialMaterial (100, 0.003));
         PL.addPoint (node1914);
         PL.addPoint (node9174);
-        RenderProps.setSpindleLines (PL, 2, Color.RED);
+        RenderProps.setSpindleLines (PL, 2, Color.cyan);
         mech.addMultiPointSpring (PL);
+        // set M. quadriceps femoris
+        FemNode3d node2255 = Patella.getNode (2255);
+        FemNode3d node2213 = Patella.getNode (2213);
+        FemNode3d node1660 = Patella.getNode (1660);
+        FemNode3d node9295 = TibiaFibula.getNode (9295);
+        FrameMarker femurmkr = new FrameMarker (348, 1497, 854);
+        femurmkr.setFrame (FemurRigid);
+        mech.addFrameMarker (femurmkr);
+        MultiPointMuscle MQF = new MultiPointMuscle ("MQF");
+        MQF.setMaterial (new LinearAxialMaterial (100, 0.003));
+        MQF.addPoint (femurmkr);
+        MQF.addPoint (node2255);
+        MQF.addPoint (node2213);
+        MQF.addPoint (node1660);
+        MQF.addPoint (node9295);
+        RenderProps.setCylindricalLines (MQF, 2, Color.red);
+        mech.addMultiPointSpring(MQF);
 	}
  	// set joint RenderProps
 	private void setJointRenderProps (JointBase joint) {
@@ -322,7 +356,9 @@ public class Knee_model extends RootModel {
 	private void setFemRenderProps (FemModel3d fem) {
 		fem.setSurfaceRendering (SurfaceRender.Shaded);
 		RenderProps.setAlpha(fem, 1.0);
-		RenderProps.setLineColor (fem, Color.darkGray);
+		RenderProps.setVisible(fem.getNodes(), false);
+		RenderProps.setVisible(fem.getElements(), false);
+		// RenderProps.setLineColor (fem, Color.darkGray);
 		RenderProps.setFaceColor (fem, Color.LIGHT_GRAY);
 		// RenderProps.setSphericalPoints (fem, 0.5, Color.CYAN);
 	}
