@@ -83,19 +83,31 @@ public class Knee_model extends RootModel {
 		// attachment femur
     	for (FemNode3d femurNode: Femur.getNodes ()) {
     		if (Femur.isSurfaceNode(femurNode)) {
-    			if (femurNode.getPosition ().y > 1436 ) {
+    			if (femurNode.getPosition ().y > 1438 ) {
+						RenderProps.setVisible(femurNode, true);
+						RenderProps.setSphericalPoints(femurNode, 0.1, Color.red);
     					mech.addAttachment (new PointFrameAttachment (FemurRigid, femurNode));
     				}
     			}
         	}
 		// attachment TiFi
 		for (FemNode3d TiFiNode : TibiaFibula.getNodes ()) {
-    		if (Femur.isSurfaceNode(TiFiNode)) {
-    			if (TiFiNode.getPosition().y < 1287) {
+    		if (TibiaFibula.isSurfaceNode(TiFiNode)) {
+    			if (TiFiNode.getPosition().y < 1290) {
+    					RenderProps.setVisible(TiFiNode, true);
+    					RenderProps.setSphericalPoints(TiFiNode, 0.1, Color.red);
 						mech.addAttachment (new PointFrameAttachment (TibiaFibulaRigid, TiFiNode));
 				}
     		}
 		}
+//		// attachment femur
+//    	for (FemNode3d femurNode: Femur.getNodes ()) {
+//    		mech.addAttachment (new PointFrameAttachment (FemurRigid, femurNode));
+//    	}
+//		// attachment TiFi
+//		for (FemNode3d TiFiNode : TibiaFibula.getNodes ()) {
+//			mech.addAttachment (new PointFrameAttachment (TibiaFibulaRigid, TiFiNode));
+//		}
 		// set contacts between models
         setCollisionBehavior (behav1, Femur, FemurCart);
         setCollisionBehavior (behav2, TibiaFibula, TibiaCart);
@@ -190,7 +202,7 @@ public class Knee_model extends RootModel {
         MQF.addPoint (node2255);
         MQF.addPoint (node2213);
         MQF.addPoint (node1660);
-        MQF.addPoint (node9295);
+        // MQF.addPoint (node9295);
         RenderProps.setCylindricalLines (MQF, 2, Color.red);
         mech.addMultiPointSpring(MQF);
 	}
@@ -199,7 +211,7 @@ public class Knee_model extends RootModel {
 		PolygonalMesh meshFemur = null;
 		meshFemur = new PolygonalMesh (Modeldata + "mesh_femur_rigid.obj");
 		RigidBody FemurRigid = 
-				RigidBody.createFromMesh("FemurRigid", meshFemur, 10, 1);
+				RigidBody.createFromMesh("FemurRigid", meshFemur, 2000, 1);
 		mech.addRigidBody(FemurRigid);
 		return FemurRigid;
 	}	
@@ -207,7 +219,7 @@ public class Knee_model extends RootModel {
 		PolygonalMesh meshTibiaFibulaRigid = null;
 		meshTibiaFibulaRigid = new PolygonalMesh (Modeldata + "mesh_TibiaFibula_rigid.obj");
 		RigidBody TibiaFibulaRigid = 
-				RigidBody.createFromMesh("TibiaFibulaRigid", meshTibiaFibulaRigid, 10, 1);
+				RigidBody.createFromMesh("TibiaFibulaRigid", meshTibiaFibulaRigid, 2000, 1);
 		mech.addRigidBody(TibiaFibulaRigid);
 		return TibiaFibulaRigid;
 	}
@@ -218,10 +230,10 @@ public class Knee_model extends RootModel {
 		Femur = new FemModel3d ("Femur");
 		Femur = AnsysCdbReader.read (Modeldata + "mesh_Femur_part.cdb");
 		// set physical properties
-		Femur.setDensity (1.9e-6);
-		Femur.setMassDamping (0.01);
-		Femur.setStiffnessDamping (0.02);
-		Femur.setMaterial (new LinearMaterial (1e9, 0.3));
+		Femur.setDensity (2000);
+		Femur.setMassDamping (0.1);
+		Femur.setStiffnessDamping (0.01);
+		Femur.setMaterial (new LinearMaterial (230e6, 0.36));
 		Femur.setName ("Femur");
 		if (Femur.isVolumeValid ())
 			System.out.println ("Femur mesh valid.");
@@ -338,7 +350,7 @@ public class Knee_model extends RootModel {
 		RenderProps.setFaceColor (fem, Color.LIGHT_GRAY);
 		RenderProps.setAlpha (fem, 1.0);
 		RenderProps.setVisible (fem.getNodes(), false);
-		RenderProps.setVisible (fem.getElements(), false);
+		RenderProps.setVisible (fem.getElements(), true);
 		// RenderProps.setLineColor (fem, Color.darkGray);
 		// RenderProps.setSphericalPoints (fem, 0.2, Color.CYAN);
 	}
@@ -358,7 +370,7 @@ public class Knee_model extends RootModel {
         behav.setCompliance (50);
         behav.setDamping (20);
         resp = mech.setCollisionResponse (fem1, fem2);
-        setCollisionManager ();
+        // setCollisionManager ();
 	}
     // set collision manager
 	private void setCollisionManager () {
