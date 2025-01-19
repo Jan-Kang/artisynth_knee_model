@@ -100,14 +100,6 @@ public class Knee_model extends RootModel {
 				}
     		}
 		}
-//		// attachment femur
-//    	for (FemNode3d femurNode: Femur.getNodes ()) {
-//    		mech.addAttachment (new PointFrameAttachment (FemurRigid, femurNode));
-//    	}
-//		// attachment TiFi
-//		for (FemNode3d TiFiNode : TibiaFibula.getNodes ()) {
-//			mech.addAttachment (new PointFrameAttachment (TibiaFibulaRigid, TiFiNode));
-//		}
 		// set contacts between models
         setCollisionBehavior (behav1, Femur, FemurCart);
         setCollisionBehavior (behav2, TibiaFibula, TibiaCart);
