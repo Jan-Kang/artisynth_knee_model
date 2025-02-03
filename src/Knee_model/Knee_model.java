@@ -120,7 +120,7 @@ public class Knee_model extends RootModel {
         Joint = createJoint (FemurRigid, TibiaFibulaRigid);
         Joint.setEnabled (true);
 		// set ligaments
-		// MCL
+		// MCL Medial Collateral Ligament
         FemNode3d node4236 = Femur.getNode (4236);
         FemNode3d node31321 = Femur.getNode (31321);
         FemNode3d node17254 = Mensicus.getNode(17254);
@@ -128,7 +128,7 @@ public class Knee_model extends RootModel {
         FemNode3d node23525 = TibiaFibula.getNode (23525);
         FemNode3d node9417 = TibiaFibula.getNode (9417);
         MultiPointSpring  MCL = new MultiPointSpring ("MCL");
-        MCL.setMaterial (new LinearAxialMaterial (100, 0.003));
+        MCL.setMaterial (new LinearAxialMaterial (2e-6, 0.02)); //setStiffness setDamping
         MCL.addPoint (node4236);
         MCL.addPoint (node31321);
         MCL.addPoint (node17254);
@@ -137,41 +137,41 @@ public class Knee_model extends RootModel {
         MCL.addPoint (node9417);
         RenderProps.setCylindricalLines(MCL, 2, Color.cyan);
         mech.addMultiPointSpring (MCL);
-        // LCL
+        // LCL Lateral Collateral Ligament
         FemNode3d node2015 = Femur.getNode (2015);
         FemNode3d node294 = TibiaFibula.getNode (294);
         MultiPointSpring  LCL = new MultiPointSpring ("LCL");
-        LCL.setMaterial (new LinearAxialMaterial (100, 0.003));
+        LCL.setMaterial (new LinearAxialMaterial (2e-6, 0.02)); //setStiffness setDamping
         LCL.addPoint (node2015);
         LCL.addPoint (node294);
         RenderProps.setSpindleLines (LCL, 2, Color.cyan);
         mech.addMultiPointSpring (LCL);
-        // ACL
+        // ACL Anterior Cruciate Ligament
         FemNode3d node389 = Femur.getNode (389);
         FemNode3d node8152 = TibiaFibula.getNode (8152);
         MultiPointSpring  ACL = new MultiPointSpring ("ACL");
-        ACL.setMaterial (new LinearAxialMaterial (100, 0.003));
+        ACL.setMaterial (new LinearAxialMaterial (2e-6, 0.03)); //setStiffness setDamping
         ACL.addPoint (node389);
         ACL.addPoint (node8152);
         RenderProps.setSpindleLines (ACL, 2, Color.cyan);
         mech.addMultiPointSpring (ACL);
-        // PCL
+        // PCL Posterior Cruciate Ligament
         FemNode3d node1113 = Femur.getNode (1113);
         FemNode3d node8512 = TibiaFibula.getNode (8512);
         MultiPointSpring  PCL = new MultiPointSpring ("PCL");
-        PCL.setMaterial (new LinearAxialMaterial (100, 0.003));
+        PCL.setMaterial (new LinearAxialMaterial (2e-6, 0.03)); //setStiffness setDamping
         PCL.addPoint (node1113);
         PCL.addPoint (node8512);
         RenderProps.setSpindleLines (PCL, 2, Color.cyan);
         mech.addMultiPointSpring (PCL);
-        // POL
+        // POL Posterior Oblique Ligament
         FemNode3d node3768 = Femur.getNode (3768);
         FemNode3d node3929 = Femur.getNode (3929);
         FemNode3d node21042 = Mensicus.getNode(21042);
         FemNode3d node8691 = TibiaFibula.getNode(8691);
         FemNode3d node8809 = TibiaFibula.getNode (8809);
         MultiPointSpring  POL = new MultiPointSpring ("POL");
-        POL.setMaterial (new LinearAxialMaterial (100, 0.003));
+        POL.setMaterial (new LinearAxialMaterial (2e-6, 0.02)); //setStiffness setDamping
         POL.addPoint (node3768);
         POL.addPoint(node3929);
         POL.addPoint(node21042);
@@ -179,11 +179,11 @@ public class Knee_model extends RootModel {
         POL.addPoint (node8809);
         RenderProps.setCylindricalLines (POL, 2, Color.cyan);
         mech.addMultiPointSpring (POL);
-        // PL
+        // PL Patellar Ligament
         FemNode3d node1914 = Patella.getNode (1914);
         FemNode3d node9174 = TibiaFibula.getNode (9174);
         MultiPointSpring  PL = new MultiPointSpring ("PL");
-        PL.setMaterial (new LinearAxialMaterial (100, 0.003));
+        PL.setMaterial (new LinearAxialMaterial (2e-6, 0.02)); //setStiffness setDamping
         PL.addPoint (node1914);
         PL.addPoint (node9174);
         RenderProps.setSpindleLines (PL, 2, Color.cyan);
@@ -197,7 +197,7 @@ public class Knee_model extends RootModel {
         FemNode3d node1660 = Patella.getNode (1660);
         FemNode3d node9295 = TibiaFibula.getNode (9295);
         MultiPointMuscle MQF = new MultiPointMuscle ("MQF");
-        MQF.setMaterial (new LinearAxialMaterial (100, 0.003));
+        MQF.setMaterial (new LinearAxialMaterial (1e-6, 0.02)); //setStiffness setDamping
         MQF.addPoint (femurmkr);
         MQF.addPoint (node2255);
         MQF.addPoint (node2213);
@@ -205,13 +205,14 @@ public class Knee_model extends RootModel {
         // MQF.addPoint (node9295);
         RenderProps.setCylindricalLines (MQF, 2, Color.red);
         mech.addMultiPointSpring(MQF);
+        
 	}
 	// import Rigid model
 	private RigidBody importFemurRigid () throws IOException {
 		PolygonalMesh meshFemur = null;
 		meshFemur = new PolygonalMesh (Modeldata + "mesh_femur_rigid.obj");
 		RigidBody FemurRigid = 
-				RigidBody.createFromMesh("FemurRigid", meshFemur, 2000, 1);
+				RigidBody.createFromMesh("FemurRigid", meshFemur, 1800, 1);
 		mech.addRigidBody(FemurRigid);
 		return FemurRigid;
 	}	
@@ -219,7 +220,7 @@ public class Knee_model extends RootModel {
 		PolygonalMesh meshTibiaFibulaRigid = null;
 		meshTibiaFibulaRigid = new PolygonalMesh (Modeldata + "mesh_TibiaFibula_rigid.obj");
 		RigidBody TibiaFibulaRigid = 
-				RigidBody.createFromMesh("TibiaFibulaRigid", meshTibiaFibulaRigid, 2000, 1);
+				RigidBody.createFromMesh("TibiaFibulaRigid", meshTibiaFibulaRigid, 1800, 1);
 		mech.addRigidBody(TibiaFibulaRigid);
 		return TibiaFibulaRigid;
 	}
@@ -230,10 +231,10 @@ public class Knee_model extends RootModel {
 		Femur = new FemModel3d ("Femur");
 		Femur = AnsysCdbReader.read (Modeldata + "mesh_Femur_part.cdb");
 		// set physical properties
-		Femur.setDensity (2000);
-		Femur.setMassDamping (0.1);
-		Femur.setStiffnessDamping (0.01);
-		Femur.setMaterial (new LinearMaterial (230e6, 0.36));
+		Femur.setDensity (1800); 
+		Femur.setMassDamping (0.02);
+		Femur.setStiffnessDamping (1e-6);
+		Femur.setMaterial (new LinearMaterial (18e9, 0.3));
 		Femur.setName ("Femur");
 		if (Femur.isVolumeValid ())
 			System.out.println ("Femur mesh valid.");
@@ -247,10 +248,10 @@ public class Knee_model extends RootModel {
 		FemurCart = new FemModel3d ("FemurCart");
 		FemurCart = AnsysCdbReader.read (Modeldata + "mesh_FemurCart.cdb");
 		// set physical properties
-		FemurCart.setDensity (1.9e-6);
-		FemurCart.setMassDamping (0.01);
-		FemurCart.setStiffnessDamping (0.02);
-		FemurCart.setMaterial (new LinearMaterial (1e9, 0.3));
+		FemurCart.setDensity (1100);
+		FemurCart.setMassDamping (0.02);
+		FemurCart.setStiffnessDamping (1e-6);
+		FemurCart.setMaterial (new LinearMaterial (12e6, 0.45));
 		FemurCart.setName ("FemurCart");
 		if (FemurCart.isVolumeValid ())
 			System.out.println ("FemurCart mesh valid.");
@@ -264,10 +265,10 @@ public class Knee_model extends RootModel {
 		Mensicus = new FemModel3d ("Mensicus");
 		Mensicus = AnsysCdbReader.read (Modeldata + "mesh_Mensicus.cdb");
 		// set physical properties
-		Mensicus.setDensity (1.9e-6);
-		Mensicus.setMassDamping (0.01);
-		Mensicus.setStiffnessDamping (0.02);
-		Mensicus.setMaterial (new LinearMaterial (1e9, 0.3));
+		Mensicus.setDensity (1200);
+		Mensicus.setMassDamping (0.03);
+		Mensicus.setStiffnessDamping (5e-6);
+		Mensicus.setMaterial (new LinearMaterial (120e6, 0.2));
 		Mensicus.setName ("Mensicus");
 		if (Mensicus.isVolumeValid ())
 			System.out.println ("Mensicus mesh valid.");
@@ -281,10 +282,10 @@ public class Knee_model extends RootModel {
 		TibiaCart = new FemModel3d ("TibiaCart");
 		TibiaCart = AnsysCdbReader.read (Modeldata + "mesh_TibiaCart.cdb");
 		// set physical properties
-		TibiaCart.setDensity (1.9e-6);
-		TibiaCart.setMassDamping (0.01);
-		TibiaCart.setStiffnessDamping (0.02);
-		TibiaCart.setMaterial (new LinearMaterial (1e9, 0.3));
+		TibiaCart.setDensity (1100);
+		TibiaCart.setMassDamping (0.02);
+		TibiaCart.setStiffnessDamping (1e-6);
+		TibiaCart.setMaterial (new LinearMaterial (12e6, 0.45));
 		TibiaCart.setName ("TibiaCart");
 		if (TibiaCart.isVolumeValid ())
 			System.out.println ("TibiaCart mesh valid.");
@@ -298,10 +299,10 @@ public class Knee_model extends RootModel {
 		TibiaFibula = new FemModel3d ("TibiaFibula");
 		TibiaFibula = AnsysCdbReader.read (Modeldata + "mesh_TibiaFibula_part.cdb");
 		// set physical properties
-		TibiaFibula.setDensity (1.9e-6);
-		TibiaFibula.setMassDamping (0.01);
-		TibiaFibula.setStiffnessDamping (0.02);
-		TibiaFibula.setMaterial (new LinearMaterial (1e9, 0.3));
+		TibiaFibula.setDensity (1800); 
+		TibiaFibula.setMassDamping (0.02);
+		TibiaFibula.setStiffnessDamping (1e-6);
+		TibiaFibula.setMaterial (new LinearMaterial (18e9, 0.3));
 		TibiaFibula.setName ("TibiaFibula");
 		if (TibiaFibula.isVolumeValid ())
 			System.out.println ("TibiaFibula mesh valid.");
@@ -315,10 +316,10 @@ public class Knee_model extends RootModel {
 		Patella = new FemModel3d ("Patella");
 		Patella = AnsysCdbReader.read (Modeldata + "mesh_Patella.cdb");
 		// set physical properties
-		Patella.setDensity (1.9e-6);
-		Patella.setMassDamping (0.01);
-		Patella.setStiffnessDamping (0.02);
-		Patella.setMaterial (new LinearMaterial (1e9, 0.3));
+		Patella.setDensity (1800); 
+		Patella.setMassDamping (0.02);
+		Patella.setStiffnessDamping (1e-6);
+		Patella.setMaterial (new LinearMaterial (18e9, 0.3));
 		Patella.setName ("Patella");
 		if (Patella.isVolumeValid ())
 			System.out.println ("Patella mesh valid.");
@@ -332,10 +333,10 @@ public class Knee_model extends RootModel {
 		PatellaCart = new FemModel3d ("PatellaCart");
 		PatellaCart = AnsysCdbReader.read (Modeldata + "mesh_PatellaCart.cdb");
 		// set physical properties
-		PatellaCart.setDensity (1.9e-6);
-		PatellaCart.setMassDamping (0.01);
-		PatellaCart.setStiffnessDamping (0.02);
-		PatellaCart.setMaterial (new LinearMaterial (1e9, 0.3));
+		PatellaCart.setDensity (1100);
+		PatellaCart.setMassDamping (0.02);
+		PatellaCart.setStiffnessDamping (1e-6);
+		PatellaCart.setMaterial (new LinearMaterial (12e6, 0.45));
 		PatellaCart.setName ("PatellaCart");
 		if (PatellaCart.isVolumeValid ())
 			System.out.println ("PatellaCart mesh valid.");
