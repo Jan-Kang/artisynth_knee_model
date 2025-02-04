@@ -26,6 +26,7 @@ import artisynth.core.mechmodels.MultiPointMuscle;
 import artisynth.core.mechmodels.MultiPointSpring;
 import artisynth.core.mechmodels.PointFrameAttachment;
 import artisynth.core.mechmodels.RigidBody;
+import artisynth.core.probes.NumericInputProbe;
 import artisynth.core.renderables.ColorBar;
 import artisynth.core.workspace.RootModel;
 import maspack.geometry.PolygonalMesh;
@@ -36,6 +37,7 @@ import maspack.render.RenderList;
 import maspack.render.RenderProps;
 import maspack.render.Renderer.AxisDrawStyle;
 import maspack.util.DoubleInterval;
+import maspack.util.PathFinder;
 
 public class Knee_model extends RootModel {
 	// path of data
@@ -84,8 +86,8 @@ public class Knee_model extends RootModel {
     	for (FemNode3d femurNode: Femur.getNodes ()) {
     		if (Femur.isSurfaceNode(femurNode)) {
     			if (femurNode.getPosition ().y > 1438 ) {
-						RenderProps.setVisible(femurNode, true);
-						RenderProps.setSphericalPoints(femurNode, 0.1, Color.red);
+						// RenderProps.setVisible(femurNode, true);
+						// RenderProps.setSphericalPoints(femurNode, 0.1, Color.red);
     					mech.addAttachment (new PointFrameAttachment (FemurRigid, femurNode));
     				}
     			}
@@ -94,8 +96,8 @@ public class Knee_model extends RootModel {
 		for (FemNode3d TiFiNode : TibiaFibula.getNodes ()) {
     		if (TibiaFibula.isSurfaceNode(TiFiNode)) {
     			if (TiFiNode.getPosition().y < 1290) {
-    					RenderProps.setVisible(TiFiNode, true);
-    					RenderProps.setSphericalPoints(TiFiNode, 0.1, Color.red);
+    					// RenderProps.setVisible(TiFiNode, true);
+    					// RenderProps.setSphericalPoints(TiFiNode, 0.1, Color.red);
 						mech.addAttachment (new PointFrameAttachment (TibiaFibulaRigid, TiFiNode));
 				}
     		}
@@ -206,7 +208,24 @@ public class Knee_model extends RootModel {
         RenderProps.setCylindricalLines (MQF, 2, Color.red);
         mech.addMultiPointSpring(MQF);
         
+        // set a FrameMarker for Probe
+        FrameMarker mkrProbe = new FrameMarker (337, 1630, 823);
+        mkrProbe.setFrame(FemurRigid);
+        mech.addFrameMarker(mkrProbe);
+        RenderProps.setSphericalPoints (mkrProbe, 6, Color.BLUE);
+        
+        createInputProbe ();
 	}
+	
+	private void createInputProbe () throws IOException {
+		NumericInputProbe ForceProbe = 
+				new NumericInputProbe (
+						mech, "frameMarkers/1:force",
+						PathFinder.getSourceRelativePath(this, "ForceforFemur.txt"));
+		ForceProbe.setName("force");
+		addInputProbe (ForceProbe);
+	}
+	
 	// import Rigid model
 	private RigidBody importFemurRigid () throws IOException {
 		PolygonalMesh meshFemur = null;
@@ -348,11 +367,11 @@ public class Knee_model extends RootModel {
 	private void setFemRenderProps (FemModel3d fem) {
 		fem.setSurfaceRendering (SurfaceRender.Stress);
 		fem.setStressPlotRanging (Ranging.Auto);
-		RenderProps.setFaceColor (fem, Color.LIGHT_GRAY);
+		// RenderProps.setFaceColor (fem, Color.LIGHT_GRAY);
 		RenderProps.setAlpha (fem, 1.0);
 		RenderProps.setVisible (fem.getNodes(), false);
 		RenderProps.setVisible (fem.getElements(), true);
-		// RenderProps.setLineColor (fem, Color.darkGray);
+		RenderProps.setLineColor (fem, Color.darkGray);
 		// RenderProps.setSphericalPoints (fem, 0.2, Color.CYAN);
 	}
 	public void prerender (RenderList list) {
@@ -368,8 +387,8 @@ public class Knee_model extends RootModel {
 	// set collision Behavior
 	private void setCollisionBehavior (CollisionBehavior behav, FemModel3d fem1, FemModel3d fem2) {
         behav = mech.setCollisionBehavior (fem1, fem2, true, 0);
-        behav.setCompliance (50);
-        behav.setDamping (20);
+        behav.setCompliance (1);
+        behav.setDamping (100);
         resp = mech.setCollisionResponse (fem1, fem2);
         // setCollisionManager ();
 	}
