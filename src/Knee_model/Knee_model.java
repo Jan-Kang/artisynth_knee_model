@@ -52,7 +52,7 @@ public class Knee_model extends RootModel {
 			   TibiaCart, TibiaFibula,
 			   Patella, PatellaCart;
 	// create collision behaviors
-    CollisionBehavior behav1, behav2, behav3, behav4, behav5, behav6, behav7;
+    CollisionBehavior behav0, behav1, behav2, behav3, behav4, behav5, behav6, behav7;
     // create collision response
     CollisionResponse resp;
     // create joint
@@ -103,6 +103,7 @@ public class Knee_model extends RootModel {
     		}
 		}
 		// set contacts between models
+		setCollisionBehavior (behav0, Femur, TibiaFibula);
         setCollisionBehavior (behav1, Femur, FemurCart);
         setCollisionBehavior (behav2, TibiaFibula, TibiaCart);
         setCollisionBehavior (behav3, FemurCart, TibiaCart);
@@ -207,6 +208,7 @@ public class Knee_model extends RootModel {
         RenderProps.setSphericalPoints (mkrProbe, 6, Color.BLUE);
         
         createInputProbe ();
+        addBreakPoint(2.0);
 	}
 	
 	private void createInputProbe () throws IOException {
@@ -379,8 +381,8 @@ public class Knee_model extends RootModel {
 	// set collision Behavior
 	private void setCollisionBehavior (CollisionBehavior behav, FemModel3d fem1, FemModel3d fem2) {
         behav = mech.setCollisionBehavior (fem1, fem2, true, 0);
-        behav.setCompliance (1);
-        behav.setDamping (100);
+        behav.setCompliance (1e-6);
+        behav.setDamping (50);
         resp = mech.setCollisionResponse (fem1, fem2);
         // setCollisionManager ();
 	}
