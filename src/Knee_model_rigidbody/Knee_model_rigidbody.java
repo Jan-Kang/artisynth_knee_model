@@ -16,6 +16,7 @@ import artisynth.core.mechmodels.RigidBody;
 import artisynth.core.probes.NumericInputProbe;
 import artisynth.core.workspace.RootModel;
 import maspack.geometry.PolygonalMesh;
+import maspack.matrix.Point3d;
 import maspack.matrix.RigidTransform3d;
 import maspack.matrix.Vector3d;
 import maspack.matrix.VectorNd;
@@ -27,7 +28,7 @@ public class Knee_model_rigidbody extends RootModel {
 	
 	String Modeldata = maspack.util.PathFinder.getSourceRelativePath(this, "data/");
 	MechModel mech = new MechModel ();
-	RigidBody Femur, FemurCart, Mensicus, TibiaCart, TibiaFibula, Patella, PatellaCart;
+	RigidBody Femur, FemurCart, Meniscus, TibiaCart, TibiaFibula, Patella, PatellaCart;
     JointBase Joint;
 
 	public void build (String [] args) throws IOException {
@@ -41,7 +42,7 @@ public class Knee_model_rigidbody extends RootModel {
         Patella = importRigidBody("patella.obj", "Patella", 1800);
         FemurCart = importRigidBody("femcart.obj", "FemurCart", 1100);
         TibiaCart = importRigidBody("tibcart.obj", "TibiaCart", 1100);
-        Mensicus = importRigidBody("mensicus.obj", "Mensicus", 1100);
+        Meniscus = importRigidBody("Meniscus.obj", "Meniscus", 1100);
         PatellaCart = importRigidBody("patcart.obj", "PatellaCart", 1100);
         
         // Set rigid body as non-dynamic
@@ -53,16 +54,22 @@ public class Knee_model_rigidbody extends RootModel {
         Joint = createJoint (Femur, TibiaFibula);
         
         // Set collision behaviors
+//        setCollisionBehavior(Femur, FemurCart, 1e-6, 0.5);
+//        setCollisionBehavior(TibiaFibula, TibiaCart, 1e-6, 0.5);
+//        setCollisionBehavior(TibiaCart, Meniscus, 1e-6, 0.5);
+//        setCollisionBehavior(FemurCart, Meniscus, 1e-6, 0.5);
+//        setCollisionBehavior(TibiaFibula, Femur, 1e-6, 0.5);
+//        setCollisionBehavior(Femur, TibiaFibula, 1e-6, 0.5);
         setCollisionBehavior(Femur, 1e-6, 0.5);
-        setCollisionBehavior(TibiaFibula, 1e-10, 2);
+        setCollisionBehavior(TibiaFibula, 1e-6, 0.5);
         setCollisionBehavior(Patella, 1e-6, 0.5);
         setCollisionBehavior(FemurCart, 1e-6, 0.5);
         setCollisionBehavior(TibiaCart, 1e-6, 1);
-        setCollisionBehavior(Mensicus, 1e-6, 0.5);
+        setCollisionBehavior(Meniscus, 1e-6, 0.5);
         setCollisionBehavior(PatellaCart, 1e-6, 0.5);
         
         // Enable collision force visualization
-        // setCollisionManager();
+        setCollisionManager();
         
         // add a Input Probe
         createInputProbe ();
@@ -81,26 +88,37 @@ public class Knee_model_rigidbody extends RootModel {
         behavior.setDamping(damping);
         mech.setCollisionBehavior(body, Collidable.All, behavior);
 	}
+    
+	// set collision Behavior
+    private void setCollisionBehavior(RigidBody bodyA, RigidBody bodyB, double compliance, double damping) {
+        CollisionBehavior behavior = new CollisionBehavior(true, 0.01);
+        behavior.setCompliance(compliance);
+        behavior.setDamping(damping);
+        mech.setCollisionBehavior(bodyA, bodyB, behavior);
+	}
     // set collision manager
     private void setCollisionManager() {
         CollisionManager cm = mech.getCollisionManager();
-        cm.setDrawContactForces(true);
-        cm.setDrawFrictionForces(true);
-        cm.setContactForceLenScale(1);
+        cm.setDrawIntersectionPoints(true);
+        cm.setDrawContactForces(false);
+        cm.setDrawFrictionForces(false);
+        cm.setContactForceLenScale(0.1);
         RenderProps.setVisible(cm, true);
         RenderProps.setSolidArrowLines(cm, 0.2, Color.RED);
+        RenderProps.setSphericalPoints(cm, 1 , Color.GREEN);
     }
     // create a InputProbe
 	private void createInputProbe () throws IOException {
         // set a FrameMarker for ForceProbe
-        FrameMarker mkrProbe = new FrameMarker (337, 1630, 823);
-        mkrProbe.setFrame(Femur);
-        mech.addFrameMarker(mkrProbe);
+        //FrameMarker mkrProbe = new FrameMarker (337, 1630, 823);
+        //mkrProbe.setFrame(Femur);
+        //mech.addFrameMarker(mkrProbe);
+		FrameMarker mkrProbe = mech.addFrameMarkerWorld(Femur, new Point3d(337, 1630, 823));
         RenderProps.setSphericalPoints (mkrProbe, 4, Color.BLUE);
         // create a ForceProbe
 		NumericInputProbe ForceProbe = 
 				new NumericInputProbe (
-						mech, "frameMarkers/0:force",
+						mech, "frameMarkers/0:externalForce",
 						PathFinder.getSourceRelativePath(this, "ForceforFemur.txt"));
 		ForceProbe.setName("force");
 		addInputProbe (ForceProbe);
