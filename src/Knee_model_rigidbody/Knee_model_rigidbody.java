@@ -2,6 +2,7 @@ package Knee_model_rigidbody;
 
 import java.awt.Color;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -28,6 +29,7 @@ import artisynth.core.probes.NumericInputProbe;
 import artisynth.core.renderables.ColorBar;
 import artisynth.core.workspace.RootModel;
 import maspack.geometry.PolygonalMesh;
+import maspack.geometry.Vertex3d;
 import maspack.matrix.Point3d;
 import maspack.matrix.RigidTransform3d;
 import maspack.matrix.Vector3d;
@@ -42,8 +44,8 @@ public class Knee_model_rigidbody extends RootModel {
 
 	String Modeldata = maspack.util.PathFinder.getSourceRelativePath(this, "data/");
 	MechModel mech = new MechModel();
-	RigidBody Femur, Meniscus, TibiaFibula, TibiaCart, Patella, PatellaCart;
-	FemModel3d FemurCart;
+	RigidBody Femur, FemurCart, Meniscus, TibiaFibula, TibiaCart, Patella, PatellaCart;
+	FemModel3d meshFemurCart;
 	JointBase Joint;
 
 	public void build(String[] args) throws IOException {
@@ -54,42 +56,53 @@ public class Knee_model_rigidbody extends RootModel {
 		mech.setGravity(0, -9.81, 0);
 
 		// import rigid bodies
-		Femur = importRigidBody("femur.obj", "Femur", 2.1e-5);
-		TibiaFibula = importRigidBody("tibia.obj", "TibiaFibula", 2.1e-5);
-		Patella = importRigidBody("patella.obj", "Patella", 2.1e-5);
+		Femur = importRigidBody("femur.obj", "Femur", 2.0e-6);
+		TibiaFibula = importRigidBody("tibia.obj", "TibiaFibula", 2.0e-6);
+		Patella = importRigidBody("patella.obj", "Patella", 2.0e-6);
 		// FemurCart = importRigidBody("femcart.obj", "FemurCart", 2.1e-5);
-		TibiaCart = importRigidBody("tibcart.obj", "TibiaCart", 2.1e-5);
-		Meniscus = importRigidBody("Meniscus.obj", "Meniscus", 2.1e-5);
-		PatellaCart = importRigidBody("patcart.obj", "PatellaCart", 2.1e-5);
-
+		TibiaCart = importRigidBody("tibcart.obj", "TibiaCart", 1.1e-6);
+		PatellaCart = importRigidBody("patcart.obj", "PatellaCart", 1.1e-6);
+		Meniscus = importRigidBody("Meniscus.obj", "Meniscus", 1.1e-6);
+		
 		// Set rigid body as non-dynamic
 		TibiaFibula.setDynamic(false);
 
 		// import FEM model
-		FemurCart = importFemModel("mesh_FemurCart.cdb", "FemurCart", 2.1e-5, 0.02, 1e-6, new LinearMaterial(1, 0.45));
+		meshFemurCart = importFemModel("mesh_FemurCart.cdb", "FemurCart", 
+				2.1e-5, // density in kg/mm³
+				0.02, // mass damping
+				1e-6, // stiffness damping
+				new LinearMaterial(1, 0.45)); // material
 
 		// connecting FEM Model to Rigid Body model
-		for (FemNode3d n : FemurCart.getNodes()) {
-			if (FemurCart.isSurfaceNode(n)) {
-				if (n.getPosition().y > 1390) {
+		PolygonalMesh surface = Femur.getSurfaceMesh();
+		double tol = 1;
+		for (FemNode3d n : meshFemurCart.getNodes()) {
+			if (meshFemurCart.isSurfaceNode(n)) {
+				Point3d point = n.getPosition();
+				if (surface.distanceToPoint(point) < tol) {
 					RenderProps.setVisible(n, true);
 					RenderProps.setSphericalPoints(n, 0.1, Color.red);
 					mech.attachPoint(n, Femur);
 				}
 			}
 		}
-
+		
+		mech.attachFrame(TibiaCart, TibiaFibula);
+		mech.attachFrame(PatellaCart, Patella);
+		
 		// set joint
 		Joint = createJoint(Femur, TibiaFibula);
 
 		// Set collision behaviors
-		setCollisionBehavior(Femur, 0.01, 1e-6, 1e6);
-		setCollisionBehavior(TibiaFibula, 0.01, 1e-6, 1e6);
-		setCollisionBehavior(Patella, 0.01, 1e-6, 1e6);
-		setCollisionBehavior(FemurCart, 0.01, 1e-6, 0.5);
-		setCollisionBehavior(TibiaCart, 0.01, 1e-6, 1e6);
-		setCollisionBehavior(Meniscus, 0.01, 1e-6, 1e6);
-		setCollisionBehavior(PatellaCart, 0.01, 1e-6, 0.5);
+		setCollisionBehavior(Femur, 0.03, 1e-6, 1e6);
+		setCollisionBehavior(TibiaFibula, 0.03, 1e-6, 1e6);
+		setCollisionBehavior(Patella, 0.03, 1e-6, 1e6);
+		setCollisionBehavior(meshFemurCart, 0.02, 10, 1e-2);
+		setCollisionBehavior(TibiaCart, 0.02, 10, 1e-2);
+		setCollisionBehavior(PatellaCart, 0.02, 10, 1e-2);
+		setCollisionBehavior(Meniscus, 0.02, 1e-4, 1e2);
+
 
 		// Enable collision force visualization
 		setCollisionManager();
@@ -161,7 +174,7 @@ public class Knee_model_rigidbody extends RootModel {
 
 	// set collision Behavior
 	private void setCollisionBehavior(Collidable Model, double mu, double compliance, double damping) {
-		CollisionBehavior behavior = new CollisionBehavior(true, mu);
+		CollisionBehavior behavior = new CollisionBehavior(true, 0);
 		behavior.setCompliance(compliance);
 		behavior.setDamping(damping);
 		mech.setCollisionBehavior(Model, Collidable.All, behavior);
@@ -199,8 +212,8 @@ public class Knee_model_rigidbody extends RootModel {
 		GimbalJoint joint = new GimbalJoint(femur, tifi, TDW);
 		// set joint ranges (in degrees)
 		joint.setRollRange(-90, 0);
-		joint.setPitchRange(-5, 5);
-		joint.setYawRange(-5, 5);
+		joint.setPitchRange(0, 0);
+		joint.setYawRange(0, 0);
 		// set joint initial value
 		joint.setRoll(0);
 		joint.setPitch(0);
