@@ -16,6 +16,7 @@ import artisynth.core.gui.ControlPanel;
 import artisynth.core.materials.Blankevoort1991AxialLigament;
 import artisynth.core.materials.FemMaterial;
 import artisynth.core.materials.LinearMaterial;
+import artisynth.core.materials.SimpleAxialMuscle;
 import artisynth.core.mechmodels.AxialSpring;
 import artisynth.core.mechmodels.Collidable;
 import artisynth.core.mechmodels.CollisionBehavior;
@@ -59,13 +60,13 @@ public class Knee_model_rigidbody extends RootModel {
 		mech.setGravity(0, -9.81, 0);
 
 		// import rigid bodies
-		Femur = importRigidBody("femur.obj", "Femur", 2.0e-6);
-		TibiaFibula = importRigidBody("tibia.obj", "TibiaFibula", 2.0e-6);
-		Patella = importRigidBody("patella.obj", "Patella", 2.0e-6);
-		// FemurCart = importRigidBody("femcart.obj", "FemurCart", 2.1e-5);
-		TibiaCart = importRigidBody("tibcart.obj", "TibiaCart", 1.1e-6);
-		PatellaCart = importRigidBody("patcart.obj", "PatellaCart", 1.1e-6);
-		Meniscus = importRigidBody("Meniscus.obj", "Meniscus", 1.1e-6);
+		Femur = importRigidBody("femur.obj", "Femur", /*density in kg/mm³*/2.0e-6);
+		TibiaFibula = importRigidBody("tibia.obj", "TibiaFibula", /*density in kg/mm³*/2.0e-6);
+		Patella = importRigidBody("patella.obj", "Patella", /*density in kg/mm³*/2.0e-6);
+		// FemurCart = importRigidBody("femcart.obj", "FemurCart", /*density in kg/mm³*/2.1e-5);
+		TibiaCart = importRigidBody("tibcart.obj", "TibiaCart", /*density in kg/mm³*/1.1e-6);
+		PatellaCart = importRigidBody("patcart.obj", "PatellaCart", /*density in kg/mm³*/1.1e-6);
+		Meniscus = importRigidBody("Meniscus.obj", "Meniscus", /*density in kg/mm³*/1.1e-6);
 		
 		// Set rigid body as non-dynamic
 		TibiaFibula.setDynamic(false);
@@ -95,9 +96,20 @@ public class Knee_model_rigidbody extends RootModel {
 		mech.attachFrame(PatellaCart, Patella);
 		
 		addLigaments(mech, Femur, TibiaFibula, Meniscus, Patella);
-
 		
-
+		FrameMarker viaFemur = new FrameMarker();
+		FrameMarker viaPatella = new FrameMarker();
+		mech.addFrameMarker(viaFemur, Femur, new Point3d(349.42842, 1487.11, 857.06726));
+		mech.addFrameMarker(viaPatella, Patella, new Point3d(355.54824, 1407.7581, 899.18102));
+		MultiPointSpring muscle = new MultiPointSpring("mus");
+		muscle.addPoint(viaFemur);
+		muscle.addPoint(viaPatella);
+		muscle.setMaterial(new SimpleAxialMuscle(/* stiffness= */1, /* damping= */0.03, /* fmax= */0));
+		mech.addMultiPointSpring(muscle);
+		RenderProps.setSphericalPoints(viaFemur, 1, Color.BLUE);
+		RenderProps.setSphericalPoints(viaPatella, 1, Color.BLUE);
+		RenderProps.setSpindleLines(muscle, 2, Color.red);
+		
 		// set joint
 		Joint = createJoint(Femur, TibiaFibula);
 
@@ -105,11 +117,10 @@ public class Knee_model_rigidbody extends RootModel {
 		setCollisionBehavior(Femur, 0.03, 1e-6, 1e6);
 		setCollisionBehavior(TibiaFibula, 0.03, 1e-6, 1e6);
 		setCollisionBehavior(Patella, 0.03, 1e-6, 1e6);
-		setCollisionBehavior(meshFemurCart, 0.02, 10, 1e-2);
-		setCollisionBehavior(TibiaCart, 0.02, 10, 1e-2);
-		setCollisionBehavior(PatellaCart, 0.02, 10, 1e-2);
-		setCollisionBehavior(Meniscus, 0.02, 1e-4, 1e2);
-
+		setCollisionBehavior(meshFemurCart, 0.02, 1e-6, 1e6);
+		setCollisionBehavior(TibiaCart, 0.02, 1e-6, 1e6);
+		setCollisionBehavior(PatellaCart, 0.02, 10, 1e6);
+		setCollisionBehavior(Meniscus, 0.02, 1e-9, 1e10);
 
 		// Enable collision force visualization
 		setCollisionManager();
@@ -187,17 +198,17 @@ public class Knee_model_rigidbody extends RootModel {
 	        {"aLCL",  femur, new Point3d(326, 1381, 841), tibiaFibula, new Point3d(311, 1328, 829), 2000, 55.8, 0.03},
 	        {"mLCL",  femur, new Point3d(327, 1381, 837), tibiaFibula, new Point3d(311, 1328, 825), 2000, 53.2, 0.03},
 	        {"pLCL",  femur, new Point3d(329, 1380, 833), tibiaFibula, new Point3d(313, 1331, 823), 2000, 51.2, 0.03},
-	        {"adMCL", femur, new Point3d(398, 1381, 847), tibiaFibula, new Point3d(394, 1349, 848), 1500, 27.2, 0.03, meniscus, new Point3d(395, 1357, 847)},
-	        {"pdMCL", femur, new Point3d(398, 1382, 838), tibiaFibula, new Point3d(395, 1348, 838), 1500, 23.8, 0.03, meniscus, new Point3d(395, 1357, 838)},
+	        {"adMCL", femur, new Point3d(398, 1381, 847), tibiaFibula, new Point3d(394, 1349, 848), 1500, 27.2, 0.03, meniscus, new Point3d(395.34588, 1357.005, 847.59604)},
+	        {"pdMCL", femur, new Point3d(398, 1382, 838), tibiaFibula, new Point3d(395, 1348, 838), 1500, 23.8, 0.03, meniscus, new Point3d(395.88117, 1357.3174, 836.81185)},
 	        {"asMCL", femur, new Point3d(398, 1384, 849), tibiaFibula, new Point3d(375, 1301, 851), 2500, 40.3, 0.03, tibiaFibula, new Point3d(395, 1345, 850)},
 	        {"msMCL", femur, new Point3d(399, 1385, 845), tibiaFibula, new Point3d(376, 1297, 848), 2600, 38.6, 0.03, tibiaFibula, new Point3d(395, 1345, 847)},
 	        {"psMCL", femur, new Point3d(399, 1384, 840), tibiaFibula, new Point3d(376, 1293, 846), 2700, 37.1, 0.03, tibiaFibula, new Point3d(396, 1345, 844)},
 	        {"aPCL",  femur, new Point3d(365, 1377, 849), tibiaFibula, new Point3d(360, 1354, 828), 12500, 39.7, 0.03},
 	        {"pPCL",  femur, new Point3d(370, 1374, 842), tibiaFibula, new Point3d(362, 1350, 825), 1500, 38.4, 0.03},
 	        {"POL",   femur, new Point3d(399, 1388, 836), tibiaFibula, new Point3d(393, 1343, 828), 1600, 44.8, 0.03},
-	        {"lPL",   tibiaFibula, new Point3d(350, 1326, 869), patella,     new Point3d(347, 1382, 895), 1600, 44.8, 0.03},
-	        {"cPL",   tibiaFibula, new Point3d(359, 1328, 871), patella,     new Point3d(356, 1373, 894), 1600, 44.8, 0.03},
-	        {"mPL",   tibiaFibula, new Point3d(364, 1331, 870), patella,     new Point3d(364, 1381, 897), 1600, 44.8, 0.03}
+	        {"lPL",   tibiaFibula, new Point3d(350, 1326, 869), patella, new Point3d(347, 1382, 895), 1, 44.8, 0.03},
+	        {"cPL",   tibiaFibula, new Point3d(359, 1328, 871), patella, new Point3d(356, 1373, 894), 1, 44.8, 0.03},
+	        {"mPL",   tibiaFibula, new Point3d(364, 1331, 870), patella, new Point3d(364, 1381, 897), 1, 44.8, 0.03}
 	    };
 		// Iterate through all ligaments and add them to the model
 		for (Object[] lig : ligaments) {
@@ -223,7 +234,7 @@ public class Knee_model_rigidbody extends RootModel {
 				ligament.addPoint(via0);
 				ligament.addPoint(viaMid);
 				ligament.addPoint(via1);
-				RenderProps.setSphericalPoints(viaMid, 1, Color.BLUE);
+				RenderProps.setSphericalPoints(viaMid, 1, Color.GREEN);
 
 			} else {
 				ligament.addPoint(via0);
@@ -237,10 +248,6 @@ public class Knee_model_rigidbody extends RootModel {
 		}
 	}
 
-
-
-	
-	
 	// set collision Behavior
 	private void setCollisionBehavior(Collidable Model, double mu, double compliance, double damping) {
 		CollisionBehavior behavior = new CollisionBehavior(true, 0);
@@ -299,8 +306,8 @@ public class Knee_model_rigidbody extends RootModel {
 		VectorNd comp = new VectorNd(joint.numConstraints());
 		VectorNd damp = new VectorNd(joint.numConstraints());
 		for (int i = 0; i < joint.numConstraints(); i++) {
-			comp.set(i, 1e-9);
-			damp.set(i, 1e9);
+			comp.set(i, 1e-10);
+			damp.set(i, 1e10);
 		}
 		joint.setCompliance(comp);
 		joint.setDamping(damp);
