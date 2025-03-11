@@ -24,6 +24,7 @@ import artisynth.core.mechmodels.CollisionManager;
 import artisynth.core.mechmodels.ConnectableBody;
 import artisynth.core.mechmodels.FrameMarker;
 import artisynth.core.mechmodels.GimbalJoint;
+import artisynth.core.mechmodels.HingeJoint;
 import artisynth.core.mechmodels.JointBase;
 import artisynth.core.mechmodels.MechModel;
 import artisynth.core.mechmodels.MultiPointSpring;
@@ -79,7 +80,8 @@ public class Knee_model_rigidbody extends RootModel {
 				new LinearMaterial(1, 0.45)); // material
 		
 		// set non-dynamic
-		TibiaFibula.setDynamic(false);
+		Femur.setDynamic(false);
+		TibiaFibula.setDynamic(true);
 		
 		// import ligaments
 		addLigaments(mech, Femur, TibiaFibula, Meniscus, Patella);
@@ -98,7 +100,9 @@ public class Knee_model_rigidbody extends RootModel {
 			}
 		}
 		
-		// connecting between Rigid Body models 
+		// connecting between Rigid Body models 		
+//		mech.attachFrame(FemurCart, Femur);
+		mech.attachFrame(Meniscus, TibiaCart);
 		mech.attachFrame(TibiaCart, TibiaFibula);
 		mech.attachFrame(PatellaCart, Patella);
 		
@@ -106,11 +110,10 @@ public class Knee_model_rigidbody extends RootModel {
 		Joint = createJoint(Femur, TibiaFibula);
 
 		// set collision behaviors
-		setCollisionBehavior(meshFemurCart, PatellaCart, 0, 0, 0);
-		setCollisionBehavior(meshFemurCart, Patella, 0, 0, 0);
-		setCollisionBehavior(meshFemurCart, TibiaCart, 0, 0, 0);
-		setCollisionBehavior(meshFemurCart, Meniscus, 0, 0, 0);
-		setCollisionBehavior(TibiaCart, Meniscus, 0, 0, 0);
+		setCollisionBehavior(Femur, PatellaCart, 0, 10e-6, 10e6);
+		setCollisionBehavior(meshFemurCart, PatellaCart, 0, 10e-6, 10e6);
+		setCollisionBehavior(meshFemurCart, Meniscus, 0, 10e-6, 10e6);
+		setCollisionBehavior(meshFemurCart, TibiaCart, 0, 10e-6, 10e6);
 		//setCollisionBehavior(Femur, 0.03, 1e-6, 1e6);
 		//setCollisionBehavior(TibiaFibula, 0.03, 1e-6, 1e6);
 		//setCollisionBehavior(Patella, 0.03, 1e-6, 1e6);
@@ -123,8 +126,8 @@ public class Knee_model_rigidbody extends RootModel {
 		setCollisionManager();
 
 		// add a Input Probe
-		createInputProbe();
-		//createOutputProbe();
+		createProbe();
+
 		// set a stop time
 		addBreakPoint(5.0);
 	}
@@ -157,14 +160,13 @@ public class Knee_model_rigidbody extends RootModel {
 		 fem.setStressPlotRanging(Ranging.Auto);
 		// RenderProps.setVisible(fem.getNodes(), false);
 		// RenderProps.setVisible(fem.getElements(), false);
-		// RenderProps.setAlpha(fem, 1.0);
+		RenderProps.setAlpha(fem, 1.0);
 		//fem.setSurfaceRendering(SurfaceRender.Shaded);
 		// RenderProps.setFaceColor (fem, Color.GRAY);
 		RenderProps.setLineColor(fem, Color.DARK_GRAY);
 		// RenderProps.setSphericalPoints (fem, 0.2, Color.CYAN);
 
 		// create a color bar
-		
 		 ColorBar cbar = new ColorBar(); 
 		 cbar.setName("colorBar");
 		 cbar.setNumberFormat("%.2f"); 
@@ -173,8 +175,6 @@ public class Knee_model_rigidbody extends RootModel {
 		 addRenderable(cbar);
 		
 	}
-	
-	
 	public void prerender(RenderList list) {
 		super.prerender(list);
 		ColorBar cbar = (ColorBar) (renderables().get("colorBar"));
@@ -185,7 +185,6 @@ public class Knee_model_rigidbody extends RootModel {
 			cbar.updateLabels(range.getLowerBound(), range.getUpperBound());
 		}
 	}
-	
 
 	private void addLigaments(MechModel mech, RigidBody femur, RigidBody tibiaFibula, RigidBody meniscus, RigidBody patella) {
 		Object[][] ligaments = {
@@ -203,9 +202,9 @@ public class Knee_model_rigidbody extends RootModel {
 	        {"aPCL",  femur, new Point3d(365, 1377, 849), tibiaFibula, new Point3d(360, 1354, 828), 12500, 39.7, 0.00},
 	        {"pPCL",  femur, new Point3d(370, 1374, 842), tibiaFibula, new Point3d(362, 1350, 825), 1500, 38.4, 0.00},
 	        {"POL",   femur, new Point3d(399, 1388, 836), tibiaFibula, new Point3d(393, 1343, 828), 1600, 44.8, 0.00},
-	        {"lPL",   tibiaFibula, new Point3d(350, 1326, 869), patella, new Point3d(347, 1382, 895), 4000, 50.8, 0.00},
-	        {"cPL",   tibiaFibula, new Point3d(359, 1328, 871), patella, new Point3d(356, 1373, 894), 4000, 40.6, 0.00},
-	        {"mPL",   tibiaFibula, new Point3d(364, 1331, 870), patella, new Point3d(364, 1381, 897), 4000, 46.8, 0.00}
+	        {"lPL",   patella, new Point3d(347, 1382, 895), tibiaFibula, new Point3d(350, 1326, 869), 4000, 50.8, 0.00},
+	        {"cPL",   patella, new Point3d(356, 1373, 894), tibiaFibula, new Point3d(359, 1328, 871), 4000, 40.6, 0.00},
+	        {"mPL",   patella, new Point3d(364, 1381, 897), tibiaFibula, new Point3d(364, 1331, 870), 4000, 46.8, 0.00}
 	    };
 		// iterate through all ligaments and add them to the model
 		for (Object[] lig : ligaments) {
@@ -250,10 +249,7 @@ public class Knee_model_rigidbody extends RootModel {
 		Muscle muscle = new Muscle("mus");
 		muscle.setPoints(viaFemur, viaPatella);
 		muscle.setRestLength(muscle.getLength());
-		//muscle.addPoint(viaFemur);
-		//muscle.addPoint(viaPatella);
-		muscle.setMaterial(new SimpleAxialMuscle(/* stiffness= */1, /* damping= */0.03, /* fmax= */5000));
-		//mech.addMultiPointSpring(muscle);
+		muscle.setMaterial(new SimpleAxialMuscle(/* stiffness= */0.2, /* damping= */0.03, /* fmax= */5));
 		mech.add(muscle);
 		RenderProps.setSphericalPoints(viaFemur, 1, Color.BLUE);
 		RenderProps.setSphericalPoints(viaPatella, 1, Color.BLUE);
@@ -261,123 +257,80 @@ public class Knee_model_rigidbody extends RootModel {
 	}
 	
 	// create joint
-		private JointBase createJoint(ConnectableBody femur, ConnectableBody tifi) {
-			Vector3d origin = new Vector3d(360, 1380, 840);
-			RigidTransform3d TDW = new RigidTransform3d(origin.x, origin.y, origin.z);
-			TDW.setRpyDeg(0, 90, 0);
-			GimbalJoint joint = new GimbalJoint(femur, tifi, TDW);
-			// set joint ranges (in degrees)
-			joint.setRollRange(-150, 10);
-			joint.setPitchRange(0, 0);
-			joint.setYawRange(0, 0);
-			// set joint initial value
-			joint.setRoll(0);
-			joint.setPitch(0);
-			joint.setYaw(0);
-			mech.addBodyConnector(joint);
-			//setJointCompliance(joint);
-			setJointRenderProps(joint);
-			JointControl(joint);
-			return joint;
+	private JointBase createJoint(ConnectableBody femur, ConnectableBody tifi) {
+		Vector3d origin = new Vector3d(360, 1380, 840);
+		RigidTransform3d TDW = new RigidTransform3d(origin.x, origin.y, origin.z);
+		TDW.setRpyDeg(0, 90, 0);
+		HingeJoint joint = new HingeJoint(femur, tifi, TDW);
+		mech.addBodyConnector(joint);
+		setJointCompliance(joint, 1e-4, 1e4);
+		setJointRenderProps(joint);
+		JointControl(joint);
+		return joint;
+	}
+	// set Compliance for Joint
+	private void setJointCompliance(JointBase joint, double complianceValue, double dampingValue) {
+		VectorNd comp = new VectorNd(joint.numConstraints());
+		VectorNd damp = new VectorNd(joint.numConstraints());
+		for (int i = 0; i < joint.numConstraints(); i++) {
+			comp.set(i, complianceValue);
+			damp.set(i, dampingValue);
 		}
-
-		// set Compliance for Joint
-		private void setJointCompliance(JointBase joint) {
-			VectorNd comp = new VectorNd(joint.numConstraints());
-			VectorNd damp = new VectorNd(joint.numConstraints());
-			for (int i = 0; i < joint.numConstraints(); i++) {
-				comp.set(i, 1e-10);
-				damp.set(i, 1e10);
-			}
-			joint.setCompliance(comp);
-			joint.setDamping(damp);
-		}
-
-		// set RenderProps for joint
-		private void setJointRenderProps(JointBase joint) {
-			joint.setShaftLength(70);
-			joint.setShaftRadius(1);
-			joint.setAxisLength(50);
-			joint.setDrawFrameC(AxisDrawStyle.ARROW);
-			joint.setDrawFrameD(AxisDrawStyle.ARROW);
-		}
-
-		// set control for Joint
-		private void JointControl(JointBase joint) {
-			ControlPanel panel = new ControlPanel();
-			panel.addWidget(joint, "roll");
-			panel.addWidget(joint, "pitch");
-			panel.addWidget(joint, "yaw");
-			panel.addWidget(joint, "rollRange");
-			panel.addWidget(joint, "pitchRange");
-			panel.addWidget(joint, "yawRange");
-			panel.addWidget(joint, "rollLocked");
-			panel.addWidget(joint, "pitchLocked");
-			panel.addWidget(joint, "yawLocked");
-			panel.addWidget(joint, "drawFrameC");
-			panel.addWidget(joint, "drawFrameD");
-			panel.addWidget(joint, "axisLength");
-			panel.addWidget(joint, "jointRadius");
-			panel.addWidget(joint, "linearCompliance");
-			panel.addWidget(joint, "rotaryCompliance");
-			panel.addWidget(joint, "compliance");
-			panel.addWidget(joint, "damping");
-			addControlPanel(panel);
-		}
+		joint.setCompliance(comp);
+		joint.setDamping(damp);
+	}
+	// set RenderProps for joint
+	private void setJointRenderProps(JointBase joint) {
+		joint.setShaftLength(70);
+		joint.setShaftRadius(1);
+		joint.setAxisLength(50);
+		joint.setDrawFrameC(AxisDrawStyle.ARROW);
+		joint.setDrawFrameD(AxisDrawStyle.ARROW);
+	}
+	// set control for Joint
+	private void JointControl(JointBase joint) {
+		ControlPanel panel = new ControlPanel();
+		panel.addWidget(joint, "theta");
+		panel.addWidget(joint, "compliance");
+		panel.addWidget(joint, "damping");
+		addControlPanel(panel);
+	}
 
 	// set collision Behavior
-	private void setCollisionBehavior(Collidable Model, double mu, double compliance, double damping) {
+	private void setCollisionBehavior(Collidable body1, Collidable body2, double mu, double compliance,
+			double damping) {
 		CollisionBehavior behavior = new CollisionBehavior(true, mu);
 		behavior.setCompliance(compliance);
 		behavior.setDamping(damping);
-		mech.setCollisionBehavior(Model, Collidable.All, behavior);
-	}
-	
-	private void setCollisionBehavior(Collidable a, Collidable b, double mu, double compliance, double damping) {
-		CollisionBehavior behavior = new CollisionBehavior(true, mu);
-		behavior.setCompliance(compliance);
-		behavior.setDamping(damping);
-		mech.setCollisionBehavior(a, b, behavior);
+		mech.setCollisionBehavior(body1, body2, behavior);
 	}
 
 	// set collision manager
 	private void setCollisionManager() {
 		CollisionManager cm = mech.getCollisionManager();
-		cm.setDrawIntersectionPoints(true);
+		RenderProps.setVisible(cm, true);
 		cm.setDrawContactForces(false);
 		cm.setDrawFrictionForces(false);
 		cm.setContactForceLenScale(0.1);
-		RenderProps.setVisible(cm, true);
 		RenderProps.setSolidArrowLines(cm, 0.2, Color.RED);
+		cm.setDrawIntersectionPoints(true);
 		RenderProps.setSphericalPoints(cm, 0.5, Color.GREEN);
 	}
 
 	// create a InputProbe
-	private void createInputProbe() throws IOException {
-		// set a FrameMarker for ForceProbe
-		FrameMarker mkrProbe = mech.addFrameMarker(Femur, new Point3d(337, 1630, 823));
+	private void createProbe() throws IOException {
+		// set a FrameMarker for Probe
+		// FrameMarker mkrProbe = mech.addFrameMarker(Femur, new Point3d(337, 1630, 823));
+		FrameMarker mkrProbe = mech.addFrameMarker(TibiaFibula, new Point3d(380, 1073, 828));
 		mkrProbe.setName("ForceProbe");
 		RenderProps.setSphericalPoints(mkrProbe, 4, Color.BLUE);
-		// create a ForceProbe
+		// create a InputProbe
 		NumericInputProbe ForceProbe = new NumericInputProbe(mech, "frameMarkers/ForceProbe:externalForce",
 				PathFinder.getSourceRelativePath(this, "ForceforFemur.txt"));
 		ForceProbe.setName("force");
 		addInputProbe(ForceProbe);
-		
+		// create a OutputProbe
 		NumericOutputProbe PosProbe = new NumericOutputProbe(mkrProbe, "externalForce", 0, 5, -1);
-		PosProbe.setName("position");
-		addOutputProbe(PosProbe);
-	}
-	// create a InputProbe
-	private void createOutputProbe() throws IOException {
-		// set a FrameMarker for ForceProbe
-		FrameMarker frameMkr = (FrameMarker) mech.get("frameMarkers/ForceProbe");
-		NumericOutputProbe PosProbe = new NumericOutputProbe(frameMkr, "externalForce", 0, 5, -1);
-		//FrameMarker mkrProbe = mech.addFrameMarker(Femur, new Point3d(337, 1630, 823));
-		//RenderProps.setSphericalPoints(mkrProbe, 4, Color.BLUE);
-		// create a ForceProbe
-		//NumericInputProbe ForceProbe = new NumericInputProbe(mech, "frameMarkers/0:externalForce",
-		//		PathFinder.getSourceRelativePath(this, "ForceforFemur.txt"));
 		PosProbe.setName("position");
 		addOutputProbe(PosProbe);
 	}
