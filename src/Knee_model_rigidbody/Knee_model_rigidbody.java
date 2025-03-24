@@ -84,7 +84,7 @@ public class Knee_model_rigidbody extends RootModel {
 				1.15e-6, // density in kg/mm³
 				0.02, // mass damping
 				50, // stiffness damping
-				new LinearMaterial(10, 0.45)); // material
+				new LinearMaterial(10, 0.45));
 		
 		// import Ligaments
 		addLigaments(mech, Femur, TibiaFibula, Meniscus, Patella);
@@ -218,7 +218,7 @@ public class Knee_model_rigidbody extends RootModel {
 	        {"aPCL",  femur, new Point3d(365, 1377, 849), tibiaFibula, new Point3d(360, 1354, 828), 12500, 39.7, 0.00},
 	        {"pPCL",  femur, new Point3d(370, 1374, 842), tibiaFibula, new Point3d(362, 1350, 825), 1500, 38.4, 0.00},
 	        {"POL",   femur, new Point3d(399, 1388, 836), tibiaFibula, new Point3d(393, 1343, 828), 1600, 44.8, 0.00},
-	        {"lPL",   patella, new Point3d(347, 1382, 895), tibiaFibula, new Point3d(350, 1326, 869), 4800, 55.8, 0.003},
+	        {"lPL",   patella, new Point3d(347, 1382, 895), tibiaFibula, new Point3d(350, 1326, 869), 6000, 55.8, 0.003},
 	        {"cPL",   patella, new Point3d(356, 1373, 894), tibiaFibula, new Point3d(359, 1328, 871), 4800, 45.6, 0.003},
 	        {"mPL",   patella, new Point3d(366, 1381, 890), tibiaFibula, new Point3d(369, 1335, 868), 3200, 46.0, 0.003}
 	    };
