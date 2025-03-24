@@ -125,7 +125,7 @@ public class Knee_model_rigidbody extends RootModel {
 		addMonitor (new ContactMonitor());
 
 		// enable collision force visualization
-        setCollisionManager();
+		// setCollisionManager();
 
 		// add a Input Probe
 		createProbe();
@@ -201,17 +201,17 @@ public class Knee_model_rigidbody extends RootModel {
 	// add Ligaments
 	private void addLigaments(MechModel mech, RigidBody femur, RigidBody tibiaFibula, RigidBody meniscus, RigidBody patella) {
 		Object[][] ligaments = {
-		    //{"ALL",   femur, new Point3d(325, 1377, 842), tibiaFibula, new Point3d(324, 1352, 844),  795, 23.5, 0.00, meniscus, new Point3d(324, 1362, 843)},	        
-		    {"ALL",   femur, new Point3d(325, 1377, 842), tibiaFibula, new Point3d(324, 1352, 844),  795, 23.5, 0.00},	        
+		    {"ALL",   femur, new Point3d(325, 1377, 842), tibiaFibula, new Point3d(324, 1352, 844),  795, 23.5, 0.00, meniscus, new Point3d(324, 1362, 843)},	        
+		    // {"ALL",   femur, new Point3d(325, 1377, 842), tibiaFibula, new Point3d(324, 1352, 844),  795, 23.5, 0.00},	        
 		    {"aACL",  femur, new Point3d(356, 1384, 834), tibiaFibula, new Point3d(362, 1357, 853), 6200, 32.3, 0.00},
 	        {"pACL",  femur, new Point3d(356, 1379, 832), tibiaFibula, new Point3d(358, 1357, 850), 3400, 26.6, 0.00},
 	        {"aLCL",  femur, new Point3d(326, 1381, 841), tibiaFibula, new Point3d(311, 1328, 829), 2000, 55.8, 0.00},
 	        {"mLCL",  femur, new Point3d(327, 1381, 837), tibiaFibula, new Point3d(311, 1328, 825), 2000, 53.2, 0.00},
 	        {"pLCL",  femur, new Point3d(329, 1380, 833), tibiaFibula, new Point3d(313, 1331, 823), 2000, 51.2, 0.00},
-	        //{"adMCL", femur, new Point3d(398, 1381, 847), tibiaFibula, new Point3d(394, 1349, 848), 1500, 27.2, 0.00, meniscus, new Point3d(395.34588, 1357.005, 847.59604)},
-	        //{"pdMCL", femur, new Point3d(398, 1382, 838), tibiaFibula, new Point3d(395, 1348, 838), 1500, 23.8, 0.00, meniscus, new Point3d(395.88117, 1357.3174, 836.81185)},
-	        {"adMCL", femur, new Point3d(398, 1381, 847), tibiaFibula, new Point3d(394, 1349, 848), 1500, 27.2, 0.00},
-	        {"pdMCL", femur, new Point3d(398, 1382, 838), tibiaFibula, new Point3d(395, 1348, 838), 1500, 23.8, 0.00},
+	        {"adMCL", femur, new Point3d(398, 1381, 847), tibiaFibula, new Point3d(394, 1349, 848), 1500, 27.2, 0.00, meniscus, new Point3d(395.34588, 1357.005, 847.59604)},
+	        {"pdMCL", femur, new Point3d(398, 1382, 838), tibiaFibula, new Point3d(395, 1348, 838), 1500, 23.8, 0.00, meniscus, new Point3d(395.88117, 1357.3174, 836.81185)},
+	        // {"adMCL", femur, new Point3d(398, 1381, 847), tibiaFibula, new Point3d(394, 1349, 848), 1500, 27.2, 0.00},
+	        // {"pdMCL", femur, new Point3d(398, 1382, 838), tibiaFibula, new Point3d(395, 1348, 838), 1500, 23.8, 0.00},
 	        {"asMCL", femur, new Point3d(398, 1384, 849), tibiaFibula, new Point3d(375, 1301, 851), 2500, 40.3, 0.00, tibiaFibula, new Point3d(395, 1345, 850)},
 	        {"msMCL", femur, new Point3d(399, 1385, 845), tibiaFibula, new Point3d(376, 1297, 848), 2600, 38.6, 0.00, tibiaFibula, new Point3d(395, 1345, 847)},
 	        {"psMCL", femur, new Point3d(399, 1384, 840), tibiaFibula, new Point3d(376, 1293, 846), 2700, 37.1, 0.00, tibiaFibula, new Point3d(396, 1345, 844)},
