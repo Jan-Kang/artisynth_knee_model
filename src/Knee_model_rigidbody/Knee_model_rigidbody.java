@@ -7,11 +7,15 @@ import java.util.Arrays;
 import java.util.List;
 
 import artisynth.core.femmodels.AnsysCdbReader;
+import artisynth.core.femmodels.FemCutPlane;
+import artisynth.core.femmodels.FemElement3d;
 import artisynth.core.femmodels.FemElement3dBase;
 import artisynth.core.femmodels.FemModel3d;
 import artisynth.core.femmodels.FemNode3d;
+import artisynth.core.fields.ScalarElementField;
 import artisynth.core.fields.ScalarFemField;
 import artisynth.core.fields.ScalarNodalField;
+import artisynth.core.fields.VectorNodalField;
 import artisynth.core.femmodels.FemModel.Ranging;
 import artisynth.core.femmodels.FemModel.SurfaceRender;
 import artisynth.core.gui.ControlPanel;
@@ -36,6 +40,7 @@ import artisynth.core.mechmodels.MultiPointSpring;
 import artisynth.core.mechmodels.Muscle;
 import artisynth.core.mechmodels.PointFrameAttachment;
 import artisynth.core.mechmodels.RigidBody;
+import artisynth.core.modelbase.FieldComponent;
 import artisynth.core.modelbase.ModelComponent;
 import artisynth.core.modelbase.MonitorBase;
 import artisynth.core.probes.NumericInputProbe;
@@ -91,6 +96,7 @@ public class Knee_model_rigidbody extends RootModel {
 		
 		// set non-dynamic
 		Femur.setDynamic(false);
+		TibiaFibula.setDynamic(true);
 		
 		// connecting FEM Model to Rigid Body model
 		PolygonalMesh surface = Femur.getSurfaceMesh();
@@ -99,8 +105,8 @@ public class Knee_model_rigidbody extends RootModel {
 			if (meshFemurCart.isSurfaceNode(n)) {
 				Point3d point = n.getPosition();
 				if (surface.distanceToPoint(point) < tol) {
-					RenderProps.setVisible(n, true);
-					RenderProps.setSphericalPoints(n, 0.1, Color.red);
+//					RenderProps.setVisible(n, true);
+//					RenderProps.setSphericalPoints(n, 0.1, Color.red);
 					mech.attachPoint(n, Femur);
 				}
 			}
@@ -131,14 +137,6 @@ public class Knee_model_rigidbody extends RootModel {
 		createProbe();
 		
 		// FEM Field
-//		ScalarNodalField field = new ScalarNodalField("VonMisesStress", meshFemurCart, 0);
-//		for (FemNode3d n : meshFemurCart.getNodes()) {
-//			field.setValue(n, n.getVonMisesStress());
-//		}
-//		meshFemurCart.addField(field);
-//		field.setVisualization(ScalarNodalField.Visualization.POINT);
-//		RenderProps.setPointRadius(field, 0.025);
-//		RenderProps.setPointStyle(field, PointStyle.SPHERE);
 
 		// set a stop time
         addBreakPoint(5.0);
@@ -163,17 +161,18 @@ public class Knee_model_rigidbody extends RootModel {
 		femModel.setName(name);
 		mech.addModel(femModel);
 		setFemRenderProps(femModel);
+		femModel.setComputeNodalStress(true);
 		return femModel;
 	}
 
 	// set FEM model render properties
 	private void setFemRenderProps(FemModel3d fem) {
-		fem.setSurfaceRendering(SurfaceRender.Stress);
-		fem.setStressPlotRanging(Ranging.Auto);
+		// fem.setSurfaceRendering(SurfaceRender.MAPStress);
+		// fem.setStressPlotRanging(Ranging.Auto);
 		// RenderProps.setVisible(fem.getNodes(), false);
 		// RenderProps.setVisible(fem.getElements(), false);
 		// RenderProps.setAlpha(fem, 1.0);
-		// fem.setSurfaceRendering(SurfaceRender.Shaded);
+//		fem.setSurfaceRendering(SurfaceRender.Shaded);
 	    // RenderProps.setFaceColor (fem, Color.GRAY);
 		// RenderProps.setLineColor(fem, Color.DARK_GRAY);
 		// RenderProps.setSphericalPoints (fem, 0.2, Color.CYAN);
@@ -187,14 +186,37 @@ public class Knee_model_rigidbody extends RootModel {
 		addRenderable(cbar);
 		
 	}
+
 	public void prerender(RenderList list) {
+		ScalarNodalField field = new ScalarNodalField(meshFemurCart);
+		meshFemurCart.addField(field);
+		double minValue = Double.MAX_VALUE;
+		double maxValue = Double.MIN_VALUE;
+		for (FemNode3d n : meshFemurCart.getNodes()) {
+			if (meshFemurCart.isSurfaceNode(n)) {
+				double value = n.getMAPStress();
+				if (value < minValue) {
+					minValue = value;
+				}
+				if (value > maxValue) {
+					maxValue = value;
+				}
+				field.setValue(n, value);
+				// n.getStress();
+				// n.getDistance();
+			}
+		}
+		meshFemurCart.setSurfaceRendering(SurfaceRender.MAPStress);
+//		field.setVisualization(ScalarNodalField.Visualization.POINT);
+//		RenderProps.setPointRadius(field, 0.2);
+//		RenderProps.setPointStyle(field, PointStyle.SPHERE);
+
 		super.prerender(list);
 		ColorBar cbar = (ColorBar) (renderables().get("colorBar"));
 		List<FemModel3d> femModels = Arrays.asList(meshFemurCart);
 		for (FemModel3d fem : femModels) {
 			cbar.setColorMap(fem.getColorMap());
-			DoubleInterval range = fem.getStressPlotRange();
-			cbar.updateLabels(range.getLowerBound(), range.getUpperBound());
+			cbar.updateLabels(minValue, maxValue);
 		}
 	}
 	
@@ -202,7 +224,6 @@ public class Knee_model_rigidbody extends RootModel {
 	private void addLigaments(MechModel mech, RigidBody femur, RigidBody tibiaFibula, RigidBody meniscus, RigidBody patella) {
 		Object[][] ligaments = {
 		    {"ALL",   femur, new Point3d(325, 1377, 842), tibiaFibula, new Point3d(324, 1352, 844),  795, 23.5, 0.00, meniscus, new Point3d(324, 1362, 843)},	        
-		    // {"ALL",   femur, new Point3d(325, 1377, 842), tibiaFibula, new Point3d(324, 1352, 844),  795, 23.5, 0.00},	        
 		    {"aACL",  femur, new Point3d(356, 1384, 834), tibiaFibula, new Point3d(362, 1357, 853), 6200, 32.3, 0.00},
 	        {"pACL",  femur, new Point3d(356, 1379, 832), tibiaFibula, new Point3d(358, 1357, 850), 3400, 26.6, 0.00},
 	        {"aLCL",  femur, new Point3d(326, 1381, 841), tibiaFibula, new Point3d(311, 1328, 829), 2000, 55.8, 0.00},
@@ -210,8 +231,6 @@ public class Knee_model_rigidbody extends RootModel {
 	        {"pLCL",  femur, new Point3d(329, 1380, 833), tibiaFibula, new Point3d(313, 1331, 823), 2000, 51.2, 0.00},
 	        {"adMCL", femur, new Point3d(398, 1381, 847), tibiaFibula, new Point3d(394, 1349, 848), 1500, 27.2, 0.00, meniscus, new Point3d(395.34588, 1357.005, 847.59604)},
 	        {"pdMCL", femur, new Point3d(398, 1382, 838), tibiaFibula, new Point3d(395, 1348, 838), 1500, 23.8, 0.00, meniscus, new Point3d(395.88117, 1357.3174, 836.81185)},
-	        // {"adMCL", femur, new Point3d(398, 1381, 847), tibiaFibula, new Point3d(394, 1349, 848), 1500, 27.2, 0.00},
-	        // {"pdMCL", femur, new Point3d(398, 1382, 838), tibiaFibula, new Point3d(395, 1348, 838), 1500, 23.8, 0.00},
 	        {"asMCL", femur, new Point3d(398, 1384, 849), tibiaFibula, new Point3d(375, 1301, 851), 2500, 40.3, 0.00, tibiaFibula, new Point3d(395, 1345, 850)},
 	        {"msMCL", femur, new Point3d(399, 1385, 845), tibiaFibula, new Point3d(376, 1297, 848), 2600, 38.6, 0.00, tibiaFibula, new Point3d(395, 1345, 847)},
 	        {"psMCL", femur, new Point3d(399, 1384, 840), tibiaFibula, new Point3d(376, 1293, 846), 2700, 37.1, 0.00, tibiaFibula, new Point3d(396, 1345, 844)},
@@ -220,7 +239,7 @@ public class Knee_model_rigidbody extends RootModel {
 	        {"POL",   femur, new Point3d(399, 1388, 836), tibiaFibula, new Point3d(393, 1343, 828), 1600, 44.8, 0.00},
 	        {"lPL",   patella, new Point3d(347, 1382, 895), tibiaFibula, new Point3d(350, 1326, 869), 6000, 55.8, 0.003},
 	        {"cPL",   patella, new Point3d(356, 1373, 894), tibiaFibula, new Point3d(359, 1328, 871), 4800, 45.6, 0.003},
-	        {"mPL",   patella, new Point3d(366, 1381, 890), tibiaFibula, new Point3d(369, 1335, 868), 3200, 46.0, 0.003}
+	        {"mPL",   patella, new Point3d(364, 1381, 897), tibiaFibula, new Point3d(364, 1331, 870), 3200, 50.0, 0.003}
 	    };
 		for (Object[] lig : ligaments) {
 			String name = (String) lig[0];
@@ -362,6 +381,7 @@ public class Knee_model_rigidbody extends RootModel {
 	// create a InputProbe
 	private void createProbe() throws IOException {
 		FrameMarker mkrProbe = mech.addFrameMarker(TibiaFibula, new Point3d(380, 1073, 828));
+		// FrameMarker mkrProbe = mech.addFrameMarker(Femur, new Point3d(331.77735, 1701.131, 795.7149));
 		mkrProbe.setName("ForceProbe");
 		RenderProps.setSphericalPoints(mkrProbe, 4, Color.BLUE);
 		// create a InputProbe
