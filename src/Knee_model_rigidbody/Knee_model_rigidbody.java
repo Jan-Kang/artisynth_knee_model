@@ -69,6 +69,7 @@ public class Knee_model_rigidbody extends RootModel {
 	JointBase Joint;
 	CollisionResponse resp;
 
+
 	public void build(String[] args) throws IOException {
 
 		addModel(mech);
@@ -133,10 +134,7 @@ public class Knee_model_rigidbody extends RootModel {
 		// enable collision force visualization
 		// setCollisionManager();
 
-		// add a Input Probe
-		createProbe();
-		
-		// FEM Field
+		addProbe();
 
 		// set a stop time
         addBreakPoint(5.0);
@@ -167,13 +165,13 @@ public class Knee_model_rigidbody extends RootModel {
 
 	// set FEM model render properties
 	private void setFemRenderProps(FemModel3d fem) {
-		// fem.setSurfaceRendering(SurfaceRender.MAPStress);
+		fem.setSurfaceRendering(SurfaceRender.MAPStress);
 		// fem.setStressPlotRanging(Ranging.Auto);
 		// RenderProps.setVisible(fem.getNodes(), false);
 		// RenderProps.setVisible(fem.getElements(), false);
 		// RenderProps.setAlpha(fem, 1.0);
-//		fem.setSurfaceRendering(SurfaceRender.Shaded);
-	    // RenderProps.setFaceColor (fem, Color.GRAY);
+		// fem.setSurfaceRendering(SurfaceRender.Shaded);
+		// RenderProps.setFaceColor (fem, Color.GRAY);
 		// RenderProps.setLineColor(fem, Color.DARK_GRAY);
 		// RenderProps.setSphericalPoints (fem, 0.2, Color.CYAN);
 
@@ -184,14 +182,28 @@ public class Knee_model_rigidbody extends RootModel {
 		cbar.populateLabels(0.0, 0.1, 10);
 		cbar.setLocation(-100, 0.1, 20, 0.8);
 		addRenderable(cbar);
-		
+
 	}
 
+	private double minValue;
+	private double maxValue;
+
 	public void prerender(RenderList list) {
+		super.prerender(list);
+		addScalarField();
+		ColorBar cbar = (ColorBar) (renderables().get("colorBar"));
+		List<FemModel3d> femModels = Arrays.asList(meshFemurCart);
+		for (FemModel3d fem : femModels) {
+			cbar.setColorMap(fem.getColorMap());
+			cbar.updateLabels(minValue, maxValue);
+		}
+	}
+
+	private void addScalarField() {
 		ScalarNodalField field = new ScalarNodalField(meshFemurCart);
 		meshFemurCart.addField(field);
-		double minValue = Double.MAX_VALUE;
-		double maxValue = Double.MIN_VALUE;
+		minValue = Double.MAX_VALUE;
+		maxValue = Double.MIN_VALUE;
 		for (FemNode3d n : meshFemurCart.getNodes()) {
 			if (meshFemurCart.isSurfaceNode(n)) {
 				double value = n.getMAPStress();
@@ -201,25 +213,20 @@ public class Knee_model_rigidbody extends RootModel {
 				if (value > maxValue) {
 					maxValue = value;
 				}
+				System.out.print(n.getStress());
+				System.out.print(n.getDisplacement());
 				field.setValue(n, value);
 				// n.getStress();
 				// n.getDistance();
 			}
-		}
-		meshFemurCart.setSurfaceRendering(SurfaceRender.MAPStress);
-//		field.setVisualization(ScalarNodalField.Visualization.POINT);
-//		RenderProps.setPointRadius(field, 0.2);
-//		RenderProps.setPointStyle(field, PointStyle.SPHERE);
-
-		super.prerender(list);
-		ColorBar cbar = (ColorBar) (renderables().get("colorBar"));
-		List<FemModel3d> femModels = Arrays.asList(meshFemurCart);
-		for (FemModel3d fem : femModels) {
-			cbar.setColorMap(fem.getColorMap());
-			cbar.updateLabels(minValue, maxValue);
-		}
+		} 
+ 
+		
+		// field.setVisualization(ScalarNodalField.Visualization.POINT);
+		// RenderProps.setPointRadius(field, 0.2);
+		// RenderProps.setPointStyle(field, PointStyle.SPHERE);
 	}
-	
+
 	// add Ligaments
 	private void addLigaments(MechModel mech, RigidBody femur, RigidBody tibiaFibula, RigidBody meniscus, RigidBody patella) {
 		Object[][] ligaments = {
@@ -378,20 +385,29 @@ public class Knee_model_rigidbody extends RootModel {
 		RenderProps.setSphericalPoints(cm, 0.5, Color.GREEN);
 	}
 	
-	// create a InputProbe
-	private void createProbe() throws IOException {
+	private void addProbe() throws IOException {
+//		FrameMarker mkrProbe = mech.addFrameMarker(Femur, new Point3d(331.77735, 1701.131, 795.7149));
 		FrameMarker mkrProbe = mech.addFrameMarker(TibiaFibula, new Point3d(380, 1073, 828));
-		// FrameMarker mkrProbe = mech.addFrameMarker(Femur, new Point3d(331.77735, 1701.131, 795.7149));
 		mkrProbe.setName("ForceProbe");
 		RenderProps.setSphericalPoints(mkrProbe, 4, Color.BLUE);
+
 		// create a InputProbe
-		NumericInputProbe ForceProbe = new NumericInputProbe(mech, "frameMarkers/ForceProbe:externalForce",
+		NumericInputProbe ForceProbe = new NumericInputProbe(mkrProbe, "externalForce",
 				PathFinder.getSourceRelativePath(this, "ForceforFemur.txt"));
 		ForceProbe.setName("force");
 		addInputProbe(ForceProbe);
+
 		// create a OutputProbe
 		NumericOutputProbe PosProbe = new NumericOutputProbe(mkrProbe, "externalForce", 0, 5, -1);
 		PosProbe.setName("position");
 		addOutputProbe(PosProbe);
+
+		NumericOutputProbe MAPstressProbe = new NumericOutputProbe(meshFemurCart, "nodes/0:MAPStress", 0, 5, -1);
+		MAPstressProbe.setName("MAPstress");
+		addOutputProbe(MAPstressProbe);
+
+		NumericOutputProbe displacementProbe = new NumericOutputProbe(meshFemurCart, "nodes/0:displacement", 0, 5, -1);
+		displacementProbe.setName("displacement");
+		addOutputProbe(displacementProbe);
 	}
 }
