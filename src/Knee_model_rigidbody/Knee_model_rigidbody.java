@@ -43,7 +43,9 @@ import artisynth.core.mechmodels.RigidBody;
 import artisynth.core.modelbase.FieldComponent;
 import artisynth.core.modelbase.ModelComponent;
 import artisynth.core.modelbase.MonitorBase;
+import artisynth.core.probes.DataFunction;
 import artisynth.core.probes.NumericInputProbe;
+import artisynth.core.probes.NumericMonitorProbe;
 import artisynth.core.probes.NumericOutputProbe;
 import artisynth.core.renderables.ColorBar;
 import artisynth.core.workspace.RootModel;
@@ -57,6 +59,7 @@ import maspack.render.RenderList;
 import maspack.render.RenderProps;
 import maspack.render.Renderer.AxisDrawStyle;
 import maspack.render.Renderer.PointStyle;
+import maspack.util.Clonable;
 import maspack.util.DoubleInterval;
 import maspack.util.PathFinder;
 
@@ -68,7 +71,6 @@ public class Knee_model_rigidbody extends RootModel {
 	FemModel3d meshFemurCart;
 	JointBase Joint;
 	CollisionResponse resp;
-
 
 	public void build(String[] args) throws IOException {
 
@@ -127,15 +129,25 @@ public class Knee_model_rigidbody extends RootModel {
 		setCollisionBehavior(meshFemurCart, Meniscus, 0, 1e-6, 1e6);
 		setCollisionBehavior(meshFemurCart, TibiaCart, 0, 1e-6, 1e6);
 		
-		// set a collision response
-		resp = mech.setCollisionResponse(meshFemurCart, Meniscus);
-		addMonitor (new ContactMonitor());
-
 		// enable collision force visualization
-		// setCollisionManager();
+//		setCollisionManager();
+		
+		// set a collision response
+//		resp = mech.setCollisionResponse(meshFemurCart, Meniscus);
+//		addMonitor (new ContactMonitor());
 
 		addProbe();
-
+		
+        NumericMonitorProbe dispProbe = new NumericMonitorProbe(meshFemurCart.numNodes() * 3, "displacement.dat", 0, 5, -1);
+        dispProbe.setName("displacement");
+        dispProbe.setDataFunction(new FEMDisplacementFunction());
+        addOutputProbe(dispProbe);
+        
+        NumericMonitorProbe MAPStressProbe = new NumericMonitorProbe(meshFemurCart.numNodes(), "MAPStress.dat", 0, 5, -1);
+        MAPStressProbe.setName("MAPStress");
+        MAPStressProbe.setDataFunction(new FEMMAPStressFunction());
+        addOutputProbe(MAPStressProbe);
+		
 		// set a stop time
         addBreakPoint(5.0);
 	}
@@ -213,18 +225,14 @@ public class Knee_model_rigidbody extends RootModel {
 				if (value > maxValue) {
 					maxValue = value;
 				}
-				System.out.print(n.getStress());
-				System.out.print(n.getDisplacement());
 				field.setValue(n, value);
-				// n.getStress();
-				// n.getDistance();
+//				n.getStress();
+//				n.getDistance();
 			}
 		} 
- 
-		
-		// field.setVisualization(ScalarNodalField.Visualization.POINT);
-		// RenderProps.setPointRadius(field, 0.2);
-		// RenderProps.setPointStyle(field, PointStyle.SPHERE);
+//		field.setVisualization(ScalarNodalField.Visualization.POINT);
+//		RenderProps.setPointRadius(field, 0.2);
+//		RenderProps.setPointStyle(field, PointStyle.SPHERE);
 	}
 
 	// add Ligaments
@@ -402,12 +410,46 @@ public class Knee_model_rigidbody extends RootModel {
 		PosProbe.setName("position");
 		addOutputProbe(PosProbe);
 
-		NumericOutputProbe MAPstressProbe = new NumericOutputProbe(meshFemurCart, "nodes/0:MAPStress", 0, 5, -1);
-		MAPstressProbe.setName("MAPstress");
-		addOutputProbe(MAPstressProbe);
+//		NumericOutputProbe MAPstressProbe = new NumericOutputProbe(meshFemurCart, "nodes/0:MAPStress", 0, 5, -1);
+//		MAPstressProbe.setName("MAPstress");
+//		addOutputProbe(MAPstressProbe);
+//
+//		NumericOutputProbe displacementProbe = new NumericOutputProbe(meshFemurCart, "nodes/0:displacement", 0, 5, -1);
+//		displacementProbe.setName("displacement");
+//		addOutputProbe(displacementProbe);
+	}
 
-		NumericOutputProbe displacementProbe = new NumericOutputProbe(meshFemurCart, "nodes/0:displacement", 0, 5, -1);
-		displacementProbe.setName("displacement");
-		addOutputProbe(displacementProbe);
+	class FEMDisplacementFunction implements DataFunction, Clonable {
+
+		public void eval(VectorNd vec, double t, double trel) {
+			int idx = 0;
+			for (FemNode3d n : meshFemurCart.getNodes()) {
+				if (meshFemurCart.isSurfaceNode(n)) {
+					vec.set(idx++, n.getDisplacement().x);
+					vec.set(idx++, n.getDisplacement().y);
+					vec.set(idx++, n.getDisplacement().z);
+				}
+			}
+		}
+
+		public Object clone() throws CloneNotSupportedException {
+			return super.clone();
+		}
+	}
+	
+	class FEMMAPStressFunction implements DataFunction, Clonable {
+
+		public void eval(VectorNd vec, double t, double trel) {
+			int idx = 0;
+			for (FemNode3d n : meshFemurCart.getNodes()) {
+				if (meshFemurCart.isSurfaceNode(n)) {
+					vec.set(idx++, n.getMAPStress());
+				}
+			}
+		}
+
+		public Object clone() throws CloneNotSupportedException {
+			return super.clone();
+		}
 	}
 }
