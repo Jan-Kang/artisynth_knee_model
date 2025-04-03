@@ -167,12 +167,12 @@ public class Knee_model_rigidbody extends RootModel {
 
 	// set FEM model render properties
 	private void setFemRenderProps(FemModel3d fem) {
-		fem.setSurfaceRendering(SurfaceRender.MAPStress);
+//		fem.setSurfaceRendering(SurfaceRender.MAPStress);
 //		fem.setStressPlotRanging(Ranging.Auto);
 //		RenderProps.setVisible(fem.getNodes(), false);
 //		RenderProps.setVisible(fem.getElements(), false);
 //		RenderProps.setAlpha(fem, 1.0);
-//		fem.setSurfaceRendering(SurfaceRender.Shaded);
+		fem.setSurfaceRendering(SurfaceRender.Shaded);
 //		RenderProps.setFaceColor (fem, Color.GRAY);
 //		RenderProps.setLineColor(fem, Color.DARK_GRAY);
 //		RenderProps.setSphericalPoints (fem, 0.2, Color.CYAN);
@@ -220,9 +220,9 @@ public class Knee_model_rigidbody extends RootModel {
 //				n.getDistance();
 			}
 		} 
-//		field.setVisualization(ScalarNodalField.Visualization.POINT);
-//		RenderProps.setPointRadius(field, 0.2);
-//		RenderProps.setPointStyle(field, PointStyle.SPHERE);
+		field.setVisualization(ScalarNodalField.Visualization.POINT);
+		RenderProps.setPointRadius(field, 0.5);
+		RenderProps.setPointStyle(field, PointStyle.SPHERE);
 	}
 
 	// add Ligaments
