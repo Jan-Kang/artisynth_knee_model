@@ -138,16 +138,6 @@ public class Knee_model_rigidbody extends RootModel {
 
 		addProbe();
 		
-        NumericMonitorProbe dispProbe = new NumericMonitorProbe(meshFemurCart.numNodes() * 3, "displacement.dat", 0, 5, -1);
-        dispProbe.setName("displacement");
-        dispProbe.setDataFunction(new FEMDisplacementFunction());
-        addOutputProbe(dispProbe);
-        
-        NumericMonitorProbe MAPStressProbe = new NumericMonitorProbe(meshFemurCart.numNodes(), "MAPStress.dat", 0, 5, -1);
-        MAPStressProbe.setName("MAPStress");
-        MAPStressProbe.setDataFunction(new FEMMAPStressFunction());
-        addOutputProbe(MAPStressProbe);
-		
 		// set a stop time
         addBreakPoint(5.0);
 	}
@@ -178,14 +168,14 @@ public class Knee_model_rigidbody extends RootModel {
 	// set FEM model render properties
 	private void setFemRenderProps(FemModel3d fem) {
 		fem.setSurfaceRendering(SurfaceRender.MAPStress);
-		// fem.setStressPlotRanging(Ranging.Auto);
-		// RenderProps.setVisible(fem.getNodes(), false);
-		// RenderProps.setVisible(fem.getElements(), false);
-		// RenderProps.setAlpha(fem, 1.0);
-		// fem.setSurfaceRendering(SurfaceRender.Shaded);
-		// RenderProps.setFaceColor (fem, Color.GRAY);
-		// RenderProps.setLineColor(fem, Color.DARK_GRAY);
-		// RenderProps.setSphericalPoints (fem, 0.2, Color.CYAN);
+//		fem.setStressPlotRanging(Ranging.Auto);
+//		RenderProps.setVisible(fem.getNodes(), false);
+//		RenderProps.setVisible(fem.getElements(), false);
+//		RenderProps.setAlpha(fem, 1.0);
+//		fem.setSurfaceRendering(SurfaceRender.Shaded);
+//		RenderProps.setFaceColor (fem, Color.GRAY);
+//		RenderProps.setLineColor(fem, Color.DARK_GRAY);
+//		RenderProps.setSphericalPoints (fem, 0.2, Color.CYAN);
 
 		// create a color bar
 		ColorBar cbar = new ColorBar();
@@ -417,6 +407,16 @@ public class Knee_model_rigidbody extends RootModel {
 //		NumericOutputProbe displacementProbe = new NumericOutputProbe(meshFemurCart, "nodes/0:displacement", 0, 5, -1);
 //		displacementProbe.setName("displacement");
 //		addOutputProbe(displacementProbe);
+		
+        NumericMonitorProbe dispProbe = new NumericMonitorProbe(meshFemurCart.numNodes() * 3, "displacement.dat", 0, 5, -1);
+        dispProbe.setName("displacement");
+        dispProbe.setDataFunction(new FEMDisplacementFunction());
+        addOutputProbe(dispProbe);
+        
+        NumericMonitorProbe MAPStressProbe = new NumericMonitorProbe(meshFemurCart.numNodes(), "MAPStress.dat", 0, 5, -1);
+        MAPStressProbe.setName("MAPStress");
+        MAPStressProbe.setDataFunction(new FEMMAPStressFunction());
+        addOutputProbe(MAPStressProbe);
 	}
 
 	class FEMDisplacementFunction implements DataFunction, Clonable {
