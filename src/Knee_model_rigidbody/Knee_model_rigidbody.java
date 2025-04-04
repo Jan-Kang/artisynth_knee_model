@@ -2,6 +2,7 @@ package Knee_model_rigidbody;
 
 import java.awt.Color;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -403,23 +404,28 @@ public class Knee_model_rigidbody extends RootModel {
 //		NumericOutputProbe MAPstressProbe = new NumericOutputProbe(meshFemurCart, "nodes/0:MAPStress", 0, 5, -1);
 //		MAPstressProbe.setName("MAPstress");
 //		addOutputProbe(MAPstressProbe);
-//
+		
+//		NumericOutputProbe MAPstressProbe = new NumericOutputProbe(meshFemurCart, "nodes", 0, 5, -1);
+//		MAPstressProbe.setName("MAPstress");
+//		addOutputProbe(MAPstressProbe);
+
 //		NumericOutputProbe displacementProbe = new NumericOutputProbe(meshFemurCart, "nodes/0:displacement", 0, 5, -1);
 //		displacementProbe.setName("displacement");
 //		addOutputProbe(displacementProbe);
 		
-        NumericMonitorProbe dispProbe = new NumericMonitorProbe(meshFemurCart.numNodes() * 3, "displacement.dat", 0, 5, -1);
+        NumericMonitorProbe dispProbe = new NumericMonitorProbe(meshFemurCart.numNodes() * 3, PathFinder.getSourceRelativePath(this, "displacement.dat"), 0, 5, -1);
         dispProbe.setName("displacement");
         dispProbe.setDataFunction(new FEMDisplacementFunction());
         addOutputProbe(dispProbe);
         
-        NumericMonitorProbe MAPStressProbe = new NumericMonitorProbe(meshFemurCart.numNodes(), "MAPStress.dat", 0, 5, -1);
+        NumericMonitorProbe MAPStressProbe = new NumericMonitorProbe(meshFemurCart.numNodes(), PathFinder.getSourceRelativePath(this, "MAPStress.dat"), 0, 5, -1);
         MAPStressProbe.setName("MAPStress");
         MAPStressProbe.setDataFunction(new FEMMAPStressFunction());
         addOutputProbe(MAPStressProbe);
 	}
 
 	class FEMDisplacementFunction implements DataFunction, Clonable {
+		PrintWriter printer;
 
 		public void eval(VectorNd vec, double t, double trel) {
 			int idx = 0;
@@ -430,6 +436,10 @@ public class Knee_model_rigidbody extends RootModel {
 					vec.set(idx++, n.getDisplacement().z);
 				}
 			}
+		}
+		
+		public FEMDisplacementFunction() {
+			
 		}
 
 		public Object clone() throws CloneNotSupportedException {
