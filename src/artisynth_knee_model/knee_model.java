@@ -146,7 +146,7 @@ public class knee_model extends RootModel {
 		addProbe();
 
 		// Set a stop time of the simulation
-		addBreakPoint(4.5);
+		addBreakPoint(5.0);
 	}
 
 	private RigidBody importRigidBody(
