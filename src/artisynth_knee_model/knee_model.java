@@ -11,6 +11,7 @@ import artisynth.core.femmodels.AnsysCdbReader;
 import artisynth.core.femmodels.FemModel3d;
 import artisynth.core.femmodels.FemNode3d;
 import artisynth.core.fields.ScalarNodalField;
+import artisynth.core.femmodels.FemModel.Ranging;
 import artisynth.core.femmodels.FemModel.SurfaceRender;
 import artisynth.core.gui.ControlPanel;
 import artisynth.core.materials.Blankevoort1991AxialLigament;
@@ -47,6 +48,7 @@ import maspack.render.RenderProps;
 import maspack.render.Renderer.AxisDrawStyle;
 import maspack.render.Renderer.PointStyle;
 import maspack.util.Clonable;
+import maspack.util.DoubleInterval;
 import maspack.util.PathFinder;
 
 public class knee_model extends RootModel {
@@ -144,7 +146,7 @@ public class knee_model extends RootModel {
 		addProbe();
 
 		// Set a stop time of the simulation
-		addBreakPoint(5.0);
+		addBreakPoint(4.5);
 	}
 
 	private RigidBody importRigidBody(
@@ -178,9 +180,9 @@ public class knee_model extends RootModel {
 	}
 
 	private void setFemRenderProps(FemModel3d fem) {
-		fem.setSurfaceRendering(SurfaceRender.Shaded);
-//		fem.setSurfaceRendering(SurfaceRender.Stress);
-//		fem.setStressPlotRanging(Ranging.Auto);
+//		fem.setSurfaceRendering(SurfaceRender.Shaded);
+		fem.setSurfaceRendering(SurfaceRender.Stress);
+		fem.setStressPlotRanging(Ranging.Auto);
 //		RenderProps.setVisible(fem.getNodes(), false);
 //		RenderProps.setVisible(fem.getElements(), false);
 //		RenderProps.setAlpha(fem, 1.0);
@@ -204,14 +206,16 @@ public class knee_model extends RootModel {
 
 	public void prerender(RenderList list) {
 		// Add a Scalar field
-		addScalarField();
+//		addScalarField();
 		// Update cbar values
 		super.prerender(list);
 		ColorBar cbar = (ColorBar) (renderables().get("colorBar"));
 		List<FemModel3d> femModels = Arrays.asList(meshFemurCart);
 		for (FemModel3d fem : femModels) {
 			cbar.setColorMap(fem.getColorMap());
-			cbar.updateLabels(minValue, maxValue);
+			DoubleInterval range = fem.getStressPlotRange();
+			cbar.updateLabels(range.getLowerBound(), range.getUpperBound());
+//			cbar.updateLabels(minValue, maxValue);
 		}
 	}
 
@@ -357,12 +361,27 @@ public class knee_model extends RootModel {
 		addControlPanel(panel);
 	}
 
-	private void setCollisionBehavior(Collidable body1, Collidable body2, double mu, double compliance,
+	private void setCollisionBehavior(
+			Collidable body1, 
+			Collidable body2, 
+			double mu, 
+			double compliance,
 			double damping) {
 		CollisionBehavior behavior = new CollisionBehavior(true, mu);
 		behavior.setCompliance(compliance);
 		behavior.setDamping(damping);
 		myMech.setCollisionBehavior(body1, body2, behavior);
+	}
+	
+	private void setCollisionManager() {
+		CollisionManager cm = myMech.getCollisionManager();
+		RenderProps.setVisible(cm, true);
+		cm.setDrawContactForces(false);
+		cm.setDrawFrictionForces(false);
+		cm.setContactForceLenScale(0.1);
+		RenderProps.setSolidArrowLines(cm, 0.2, Color.RED);
+		cm.setDrawIntersectionPoints(true);
+		RenderProps.setSphericalPoints(cm, 0.5, Color.GREEN);
 	}
 	
 	private class ContactMonitor extends MonitorBase {
@@ -382,18 +401,6 @@ public class knee_model extends RootModel {
 		}
 	}
 	
-	// set collision manager
-	private void setCollisionManager() {
-		CollisionManager cm = myMech.getCollisionManager();
-		RenderProps.setVisible(cm, true);
-		cm.setDrawContactForces(false);
-		cm.setDrawFrictionForces(false);
-		cm.setContactForceLenScale(0.1);
-		RenderProps.setSolidArrowLines(cm, 0.2, Color.RED);
-		cm.setDrawIntersectionPoints(true);
-		RenderProps.setSphericalPoints(cm, 0.5, Color.GREEN);
-	}
-	
 	private void addProbe() throws IOException {
 		FrameMarker mkrProbe = myMech.addFrameMarker(TibiaFibula, new Point3d(380, 1073, 828));
 		mkrProbe.setName("ForceProbe");
@@ -411,24 +418,24 @@ public class knee_model extends RootModel {
 		PosProbe.setName("position");
 		addOutputProbe(PosProbe);
 		
-		// Create a MonitorProbe    
-        NumericMonitorProbe DispProbe = new NumericMonitorProbe(meshFemurCart.numNodes() * 3, 
-        		PathFinder.getSourceRelativePath(this, "Displacement.dat"), 0, 4, -1);
-        DispProbe.setName("Displacement");
-        DispProbe.setDataFunction(new FEMDisplacementFunction());
-        addOutputProbe(DispProbe);
-        
-        NumericMonitorProbe StressProbe = new NumericMonitorProbe(meshFemurCart.numNodes()*9, 
-        		PathFinder.getSourceRelativePath(this, "Stress.dat"), 0, 4, -1);
-        StressProbe.setName("Stress");
-        StressProbe.setDataFunction(new FEMStressFunction());
-        addOutputProbe(StressProbe);
-        
-        NumericMonitorProbe StrainProbe = new NumericMonitorProbe(meshFemurCart.numNodes()*9, 
-        		PathFinder.getSourceRelativePath(this, "Strain.dat"), 0, 4, -1);
-        StrainProbe.setName("Strain");
-        StrainProbe.setDataFunction(new FEMStrainFunction());
-        addOutputProbe(StrainProbe);
+		// Create a MonitorProbe
+		NumericMonitorProbe DispProbe = new NumericMonitorProbe(meshFemurCart.numNodes() * 3,
+				myPath + "output/Displacement.dat", 0, 5, -1);
+		DispProbe.setName("Displacement");
+		DispProbe.setDataFunction(new FEMDisplacementFunction());
+		addOutputProbe(DispProbe);
+
+		NumericMonitorProbe StressProbe = new NumericMonitorProbe(meshFemurCart.numNodes() * 9,
+				myPath + "output/Stress.dat", 0, 5, -1);
+		StressProbe.setName("Stress");
+		StressProbe.setDataFunction(new FEMStressFunction());
+		addOutputProbe(StressProbe);
+
+		NumericMonitorProbe StrainProbe = new NumericMonitorProbe(meshFemurCart.numNodes() * 9,
+				myPath + "output/Strain.dat", 0, 5, -1);
+		StrainProbe.setName("Strain");
+		StrainProbe.setDataFunction(new FEMStrainFunction());
+		addOutputProbe(StrainProbe);
 	}
 	
 	public PrintWriter writerPosition;
