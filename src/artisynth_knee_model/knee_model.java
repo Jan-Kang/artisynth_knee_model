@@ -71,23 +71,23 @@ public class knee_model extends RootModel {
 		addModel(myMech);
 
 		// Set a gravity
-		// Units: m/s^2
+		// Units: mm/s^2
 		myMech.setGravity(0, -9810, 0);
 
 		// Import rigid bodies
 		// All model dimensions are originally in mm.
 		// To ensure unit consistency, all dimensions are converted to meters.
-		// Bone, density in kg/m³
+		// Bone, density in kg/mm³
+		// Cartilage, density in kg/mm³
 		Femur = importRigidBody("femur.obj", "Femur", 1.3e-6);
 		TibiaFibula = importRigidBody("tibia.obj", "TibiaFibula", 1.3e-6);
 		Patella = importRigidBody("patella.obj", "Patella", 1.3e-6);
-		// Cartilage, density in kg/m³
 		TibiaCart = importRigidBody("tibcart.obj", "TibiaCart", 1.15e-6);
 		PatellaCart = importRigidBody("patcart.obj", "PatellaCart", 1.15e-6);
 		Meniscus = importRigidBody("Meniscus.obj", "Meniscus", 1.1e-6);
 
-		// Import fem models
-		meshFemurCart = importFemModel("mesh_FemurCart.cdb", "FemurCart", 1.15e-6, // density in kg/m³
+		// Import FEM-models
+		meshFemurCart = importFemModel("mesh_FemurCart.cdb", "FemurCart", 1.15e-6, // density in kg/mm³
 				0.02, // mass damping
 				50, // stiffness damping
 				new LinearMaterial(/* Young's modulu(MPa): */10, 
@@ -95,13 +95,16 @@ public class knee_model extends RootModel {
 
 		// Import ligaments
 		addLigaments(Femur, TibiaFibula, Meniscus, Patella);
+		
+		// Import Muscle
+		addMuscle(Femur, Patella);
 
 		// Connecting between rigid body models
 		myMech.attachFrame(Meniscus, TibiaCart);
 		myMech.attachFrame(TibiaCart, TibiaFibula);
 		myMech.attachFrame(PatellaCart, Patella);
 
-		// Connecting the fem model to rigid body model with nodes of mesh model
+		// Connecting the FEM-model to rigid body model with nodes of mesh model
 		PolygonalMesh femurSurface = Femur.getSurfaceMesh();
 		double tol = 1;
 		for (FemNode3d n : meshFemurCart.getNodes()) {
@@ -292,16 +295,19 @@ public class knee_model extends RootModel {
 				ligament.addPoint(via1);
 			}
 			myMech.addMultiPointSpring(ligament);
-			// Set render properties for spring
+			// Set render properties for ligament
 			RenderProps.setSphericalPoints(via0, 1, Color.BLUE);
 			RenderProps.setSphericalPoints(via1, 1, Color.BLUE);
 			RenderProps.setCylindricalLines(ligament, 0.3, Color.white);
 		}
+		
+	}
+	
+	private void addMuscle(RigidBody femur, RigidBody patella) {
 		// Create muscle between Femur and Patella
-		Point3d[] patellaPoints = { 
-				new Point3d(355.54824, 1407.7581, 899.18102),
-				new Point3d(367.64791, 1410.5255, 895.69954),
-				new Point3d(343.9282, 1410.4975, 894.20783)};
+		Point3d[] patellaPoints = { new Point3d(355.54824, 1407.7581, 899.18102),
+									new Point3d(367.64791, 1410.5255, 895.69954),
+									new Point3d(343.9282, 1410.4975, 894.20783) };
 		String[] muscleNames = { "musM", "musL", "musR" };
 		FrameMarker viaFemur = new FrameMarker();
 		myMech.addFrameMarker(viaFemur, femur, new Point3d(349.42842, 1487.11, 857.06726));
@@ -408,7 +414,7 @@ public class knee_model extends RootModel {
 
 		// create a InputProbe
 		NumericInputProbe ForceProbe = new NumericInputProbe(mkrProbe, "externalForce",
-				PathFinder.getSourceRelativePath(this, "ForceforFemur.txt"));
+				PathFinder.getSourceRelativePath(this, "Force.txt"));
 		ForceProbe.setName("OutputProbe_force");
 		addInputProbe(ForceProbe);
 
@@ -444,9 +450,9 @@ public class knee_model extends RootModel {
 
 	public void initialWriter() throws IOException {
 		try {
-			writerPosition = new PrintWriter(new FileWriter(myPath + "output/Displacement.txt", false));
-			writerStress = new PrintWriter(new FileWriter(myPath + "output/Stress.txt", false));
-			writerStrain = new PrintWriter(new FileWriter(myPath + "output/Strain.txt", false));
+			writerPosition = new PrintWriter(new FileWriter(myPath + "output/Displacement.txt", true));
+			writerStress = new PrintWriter(new FileWriter(myPath + "output/Stress.txt", true));
+			writerStrain = new PrintWriter(new FileWriter(myPath + "output/Strain.txt", true));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -491,7 +497,8 @@ public class knee_model extends RootModel {
 					vec.set(idx++, n.getStress().m21);
 					vec.set(idx++, n.getStress().m22);
 					writerStress.print("Node Id:" + n.getNumber());
-					writerStress.print(" stress: " + n.getStress());
+					writerStress.print(" stress: ");
+					writerStress.println(n.getStress());
 				}
 			}
 		}
@@ -517,7 +524,8 @@ public class knee_model extends RootModel {
 					vec.set(idx++, n.getStrain().m21);
 					vec.set(idx++, n.getStrain().m22);
 					writerStrain.print("Node Id:" + n.getNumber());
-					writerStrain.print(" Strain: " + n.getStrain());
+					writerStrain.print(" Strain: ");
+					writerStrain.println(n.getStrain());
 				}
 			}
 		}
