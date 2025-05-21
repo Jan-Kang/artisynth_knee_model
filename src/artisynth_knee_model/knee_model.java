@@ -72,7 +72,7 @@ public class knee_model extends RootModel {
 
 		// Set a gravity
 		// Units: m/s^2
-		myMech.setGravity(0, -9.81, 0);
+		myMech.setGravity(0, -9810, 0);
 
 		// Import rigid bodies
 		// All model dimensions are originally in mm.
@@ -130,11 +130,11 @@ public class knee_model extends RootModel {
 		setCollisionBehavior(meshFemurCart, TibiaCart, 0, 1e-6, 1e6);
 
 		// Enable collision force visualization
-//		setCollisionManager();
+		setCollisionManager();
 
 		// Set a collision response
-//		resp = mech.setCollisionResponse(meshFemurCart, Meniscus);
-//		addMonitor (new ContactMonitor());
+		myResp = myMech.setCollisionResponse(meshFemurCart, Meniscus);
+		addMonitor (new ContactMonitor());
 		
 		// Add a color bar
 		createColorBar();
@@ -146,7 +146,7 @@ public class knee_model extends RootModel {
 		addProbe();
 
 		// Set a stop time of the simulation
-		addBreakPoint(5.0);
+		addBreakPoint(4.0);
 	}
 
 	private RigidBody importRigidBody(
@@ -242,12 +242,12 @@ public class knee_model extends RootModel {
 	private void addLigaments(RigidBody femur, RigidBody tibiaFibula, RigidBody meniscus, RigidBody patella) {
 		// Data of ligaments
 		Object[][] ligaments = {
-		    {"ALL",   femur, new Point3d(325, 1377, 842), tibiaFibula, new Point3d(324, 1352, 844),  795, 23.5, 0.00, meniscus, new Point3d(324, 1362, 843)},	        
+		    {"ALL",   femur, new Point3d(325, 1377, 842), tibiaFibula, new Point3d(324, 1352, 844), 3000, 15, 0.00, meniscus, new Point3d(324, 1362, 843)},	        
 		    {"aACL",  femur, new Point3d(356, 1384, 834), tibiaFibula, new Point3d(362, 1357, 853), 6200, 32.3, 0.00},
 	        {"pACL",  femur, new Point3d(356, 1379, 832), tibiaFibula, new Point3d(358, 1357, 850), 3400, 26.6, 0.00},
-	        {"aLCL",  femur, new Point3d(326, 1381, 841), tibiaFibula, new Point3d(311, 1328, 829), 2000, 55.8, 0.00},
-	        {"mLCL",  femur, new Point3d(327, 1381, 837), tibiaFibula, new Point3d(311, 1328, 825), 2000, 53.2, 0.00},
-	        {"pLCL",  femur, new Point3d(329, 1380, 833), tibiaFibula, new Point3d(313, 1331, 823), 2000, 51.2, 0.00},
+	        {"aLCL",  femur, new Point3d(326, 1381, 841), tibiaFibula, new Point3d(311, 1328, 829), 8000, 45, 0.00},
+	        {"mLCL",  femur, new Point3d(327, 1381, 837), tibiaFibula, new Point3d(311, 1328, 825), 8000, 40.2, 0.00},
+	        {"pLCL",  femur, new Point3d(329, 1380, 833), tibiaFibula, new Point3d(313, 1331, 823), 8000, 40.2, 0.00},
 	        {"adMCL", femur, new Point3d(398, 1381, 847), tibiaFibula, new Point3d(394, 1349, 848), 1500, 27.2, 0.00, meniscus, new Point3d(395.34588, 1357.005, 847.59604)},
 	        {"pdMCL", femur, new Point3d(398, 1382, 838), tibiaFibula, new Point3d(395, 1348, 838), 1500, 23.8, 0.00, meniscus, new Point3d(395.88117, 1357.3174, 836.81185)},
 	        {"asMCL", femur, new Point3d(398, 1384, 849), tibiaFibula, new Point3d(375, 1301, 851), 2500, 40.3, 0.00, tibiaFibula, new Point3d(395, 1345, 850)},
@@ -325,7 +325,7 @@ public class knee_model extends RootModel {
 	private JointBase createJoint(ConnectableBody femur, ConnectableBody tifi) {
 		Vector3d origin = new Vector3d(360, 1380, 840);
 		RigidTransform3d TDW = new RigidTransform3d(origin.x, origin.y, origin.z);
-		TDW.setRpyDeg(0, 90, 0);
+		TDW.setRpyDeg(-5, 90, 0);
 		HingeJoint joint = new HingeJoint(femur, tifi, TDW);
 		myMech.addBodyConnector(joint);
 		setJointCompliance(joint, 1e-4, 1e2);
@@ -409,30 +409,30 @@ public class knee_model extends RootModel {
 		// create a InputProbe
 		NumericInputProbe ForceProbe = new NumericInputProbe(mkrProbe, "externalForce",
 				PathFinder.getSourceRelativePath(this, "ForceforFemur.txt"));
-		ForceProbe.setName("force");
+		ForceProbe.setName("OutputProbe_force");
 		addInputProbe(ForceProbe);
 
 		// create a OutputProbe
-		NumericOutputProbe PosProbe = new NumericOutputProbe(mkrProbe, "externalForce", 
-				0, 4, -1);
-		PosProbe.setName("position");
+		NumericOutputProbe PosProbe = new NumericOutputProbe(mkrProbe, "displacement", 
+				0, 20, -1);
+		PosProbe.setName("OutputProbe_displacement");
 		addOutputProbe(PosProbe);
 		
 		// Create a MonitorProbe
 		NumericMonitorProbe DispProbe = new NumericMonitorProbe(meshFemurCart.numNodes() * 3,
-				myPath + "output/Displacement.dat", 0, 5, -1);
+				myPath + "output/Displacement.dat", 0, 20, -1);
 		DispProbe.setName("Displacement");
 		DispProbe.setDataFunction(new FEMDisplacementFunction());
 		addOutputProbe(DispProbe);
 
 		NumericMonitorProbe StressProbe = new NumericMonitorProbe(meshFemurCart.numNodes() * 9,
-				myPath + "output/Stress.dat", 0, 5, -1);
+				myPath + "output/Stress.dat", 0, 20, -1);
 		StressProbe.setName("Stress");
 		StressProbe.setDataFunction(new FEMStressFunction());
 		addOutputProbe(StressProbe);
 
 		NumericMonitorProbe StrainProbe = new NumericMonitorProbe(meshFemurCart.numNodes() * 9,
-				myPath + "output/Strain.dat", 0, 5, -1);
+				myPath + "output/Strain.dat", 0, 20, -1);
 		StrainProbe.setName("Strain");
 		StrainProbe.setDataFunction(new FEMStrainFunction());
 		addOutputProbe(StrainProbe);
@@ -444,9 +444,9 @@ public class knee_model extends RootModel {
 
 	public void initialWriter() throws IOException {
 		try {
-			writerPosition = new PrintWriter(new FileWriter(myPath + "output/Displacement.txt", true));
-			writerStress = new PrintWriter(new FileWriter(myPath + "output/Stress.txt", true));
-			writerStrain = new PrintWriter(new FileWriter(myPath + "output/Strain.txt", true));
+			writerPosition = new PrintWriter(new FileWriter(myPath + "output/Displacement.txt", false));
+			writerStress = new PrintWriter(new FileWriter(myPath + "output/Stress.txt", false));
+			writerStrain = new PrintWriter(new FileWriter(myPath + "output/Strain.txt", false));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
